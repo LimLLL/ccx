@@ -440,6 +440,8 @@ export interface ModelHistoryDataPoint {
   failureCount: number
   inputTokens: number
   outputTokens: number
+  cacheCreationTokens: number
+  cacheReadTokens: number
 }
 
 export interface ModelStatsHistoryResponse {

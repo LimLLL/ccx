@@ -3259,11 +3259,13 @@ func (m *MetricsManager) GetGlobalHistoricalStatsWithTokens(duration, interval t
 
 	// 按模型分桶（复用 modelBucket 结构）
 	type modelBucket struct {
-		requestCount int64
-		successCount int64
-		failureCount int64
-		inputTokens  int64
-		outputTokens int64
+		requestCount        int64
+		successCount        int64
+		failureCount        int64
+		inputTokens         int64
+		outputTokens        int64
+		cacheCreationTokens int64
+		cacheReadTokens     int64
 	}
 	modelBuckets := make(map[string][]modelBucket)
 
@@ -3312,6 +3314,8 @@ func (m *MetricsManager) GetGlobalHistoricalStatsWithTokens(duration, interval t
 						}
 						mb.inputTokens += record.InputTokens
 						mb.outputTokens += record.OutputTokens
+						mb.cacheCreationTokens += record.CacheCreationInputTokens
+						mb.cacheReadTokens += record.CacheReadInputTokens
 					}
 				}
 			}
@@ -3365,12 +3369,14 @@ func (m *MetricsManager) GetGlobalHistoricalStatsWithTokens(duration, interval t
 			points := make([]ModelHistoryDataPoint, numPoints)
 			for i := 0; i < numPoints; i++ {
 				points[i] = ModelHistoryDataPoint{
-					Timestamp:    startTime.Add(time.Duration(i+1) * interval),
-					RequestCount: buckets[i].requestCount,
-					SuccessCount: buckets[i].successCount,
-					FailureCount: buckets[i].failureCount,
-					InputTokens:  buckets[i].inputTokens,
-					OutputTokens: buckets[i].outputTokens,
+					Timestamp:           startTime.Add(time.Duration(i+1) * interval),
+					RequestCount:        buckets[i].requestCount,
+					SuccessCount:        buckets[i].successCount,
+					FailureCount:        buckets[i].failureCount,
+					InputTokens:         buckets[i].inputTokens,
+					OutputTokens:        buckets[i].outputTokens,
+					CacheCreationTokens: buckets[i].cacheCreationTokens,
+					CacheReadTokens:     buckets[i].cacheReadTokens,
 				}
 			}
 			modelDataPoints[model] = points
@@ -3520,12 +3526,14 @@ func (m *MetricsManager) GetRecentActivityMultiURL(channelIndex int, baseURLs []
 
 // ModelHistoryDataPoint 模型级别历史数据点
 type ModelHistoryDataPoint struct {
-	Timestamp    time.Time `json:"timestamp"`
-	RequestCount int64     `json:"requestCount"`
-	SuccessCount int64     `json:"successCount"`
-	FailureCount int64     `json:"failureCount"`
-	InputTokens  int64     `json:"inputTokens"`
-	OutputTokens int64     `json:"outputTokens"`
+	Timestamp           time.Time `json:"timestamp"`
+	RequestCount        int64     `json:"requestCount"`
+	SuccessCount        int64     `json:"successCount"`
+	FailureCount        int64     `json:"failureCount"`
+	InputTokens         int64     `json:"inputTokens"`
+	OutputTokens        int64     `json:"outputTokens"`
+	CacheCreationTokens int64     `json:"cacheCreationTokens"`
+	CacheReadTokens     int64     `json:"cacheReadTokens"`
 }
 
 // GetModelStatsHistory 获取按模型分组的历史统计
@@ -3555,11 +3563,13 @@ func (m *MetricsManager) GetModelStatsHistory(duration, interval time.Duration) 
 	// 解锁后进行聚合计算
 	// 按模型分组收集记录
 	type modelBucket struct {
-		requestCount int64
-		successCount int64
-		failureCount int64
-		inputTokens  int64
-		outputTokens int64
+		requestCount        int64
+		successCount        int64
+		failureCount        int64
+		inputTokens         int64
+		outputTokens        int64
+		cacheCreationTokens int64
+		cacheReadTokens     int64
 	}
 	// model -> bucketIndex -> data
 	modelBuckets := make(map[string][]modelBucket)
@@ -3589,6 +3599,8 @@ func (m *MetricsManager) GetModelStatsHistory(duration, interval time.Duration) 
 			}
 			b.inputTokens += record.InputTokens
 			b.outputTokens += record.OutputTokens
+			b.cacheCreationTokens += record.CacheCreationInputTokens
+			b.cacheReadTokens += record.CacheReadInputTokens
 		}
 	}
 
@@ -3598,12 +3610,14 @@ func (m *MetricsManager) GetModelStatsHistory(duration, interval time.Duration) 
 		points := make([]ModelHistoryDataPoint, numPoints)
 		for i := 0; i < numPoints; i++ {
 			points[i] = ModelHistoryDataPoint{
-				Timestamp:    startTime.Add(time.Duration(i) * interval),
-				RequestCount: buckets[i].requestCount,
-				SuccessCount: buckets[i].successCount,
-				FailureCount: buckets[i].failureCount,
-				InputTokens:  buckets[i].inputTokens,
-				OutputTokens: buckets[i].outputTokens,
+				Timestamp:           startTime.Add(time.Duration(i) * interval),
+				RequestCount:        buckets[i].requestCount,
+				SuccessCount:        buckets[i].successCount,
+				FailureCount:        buckets[i].failureCount,
+				InputTokens:         buckets[i].inputTokens,
+				OutputTokens:        buckets[i].outputTokens,
+				CacheCreationTokens: buckets[i].cacheCreationTokens,
+				CacheReadTokens:     buckets[i].cacheReadTokens,
 			}
 		}
 		result[model] = points

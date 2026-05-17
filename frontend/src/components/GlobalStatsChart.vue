@@ -59,6 +59,10 @@
         <div class="summary-label">{{ t('chart.outputTokens') }}</div>
         <div class="summary-value">{{ formatNumber(summary.totalOutputTokens) }}</div>
       </div>
+      <div v-if="summary.totalCacheReadTokens > 0 || summary.totalCacheCreationTokens > 0" class="summary-card">
+        <div class="summary-label">{{ t('chart.cacheRw') }}</div>
+        <div class="summary-value">{{ formatNumber(summary.totalCacheReadTokens) }} / {{ formatNumber(summary.totalCacheCreationTokens) }}</div>
+      </div>
     </div>
 
     <!-- Compact summary (single line) -->
@@ -69,6 +73,9 @@
       </span>
       <span><strong>{{ formatNumber(summary.totalInputTokens) }}</strong> {{ t('chart.input') }}</span>
       <span><strong>{{ formatNumber(summary.totalOutputTokens) }}</strong> {{ t('chart.output') }}</span>
+      <span v-if="summary.totalCacheReadTokens > 0 || summary.totalCacheCreationTokens > 0">
+        <strong>{{ formatNumber(summary.totalCacheReadTokens) }}/{{ formatNumber(summary.totalCacheCreationTokens) }}</strong> {{ t('chart.cacheRw') }}
+      </span>
     </div>
 
     <!-- Loading state -->
@@ -184,6 +191,12 @@ const hasData = computed(() => {
     historyData.value.dataPoints.some(dp => dp.requestCount > 0)
 })
 
+// Check if cache data exists
+const hasCacheData = computed(() => {
+  if (!historyData.value?.dataPoints) return false
+  return historyData.value.dataPoints.some(dp => (dp.cacheReadTokens || 0) > 0 || (dp.cacheCreationTokens || 0) > 0)
+})
+
 // Chart colors
 const chartColors = {
   traffic: {
@@ -191,7 +204,9 @@ const chartColors = {
   },
   tokens: {
     input: '#8b5cf6',      // Purple for input
-    output: '#f97316'      // Orange for output
+    output: '#f97316',     // Orange for output
+    cacheRead: '#10b981',  // Green for cache read
+    cacheWrite: '#06b6d4'  // Cyan for cache write
   }
 }
 
@@ -319,7 +334,9 @@ const chartOptions = computed<ApexOptions>(() => {
     },
     colors: mode === 'traffic'
       ? trafficColors
-      : [chartColors.tokens.input, chartColors.tokens.output],
+      : hasCacheData.value
+        ? [chartColors.tokens.input, chartColors.tokens.output, chartColors.tokens.cacheRead, chartColors.tokens.cacheWrite]
+        : [chartColors.tokens.input, chartColors.tokens.output],
     fill: {
       type: 'gradient' as const,
       gradient: {
@@ -335,7 +352,7 @@ const chartOptions = computed<ApexOptions>(() => {
     stroke: {
       curve: 'smooth' as const,
       width: 2,
-      dashArray: mode === 'tokens' ? [0, 5] : 0
+      dashArray: mode === 'tokens' ? (hasCacheData.value ? [0, 5, 0, 5] : [0, 5]) : 0
     },
     grid: {
       borderColor: isDark.value ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
@@ -351,25 +368,34 @@ const chartOptions = computed<ApexOptions>(() => {
       axisBorder: { show: false },
       axisTicks: { show: false }
     },
-    yaxis: mode === 'tokens' ? [
-      {
-        seriesName: t('chart.inputTokens'),
-        labels: {
-          formatter: (val: number) => formatNumber(val),
-          style: { fontSize: '11px' }
+    yaxis: mode === 'tokens' ? (() => {
+      const axes: any[] = [
+        {
+          seriesName: t('chart.inputTokens'),
+          labels: {
+            formatter: (val: number) => formatNumber(val),
+            style: { fontSize: '11px' }
+          },
+          min: 0
         },
-        min: 0
-      },
-      {
-        seriesName: t('chart.outputTokens'),
-        opposite: true,
-        labels: {
-          formatter: (val: number) => formatNumber(val),
-          style: { fontSize: '11px' }
-        },
-        min: 0
+        {
+          seriesName: t('chart.outputTokens'),
+          opposite: true,
+          labels: {
+            formatter: (val: number) => formatNumber(val),
+            style: { fontSize: '11px' }
+          },
+          min: 0
+        }
+      ]
+      if (hasCacheData.value) {
+        axes.push(
+          { seriesName: 'Cache Read', show: false, min: 0 },
+          { seriesName: 'Cache Write', show: false, min: 0 }
+        )
       }
-    ] : {
+      return axes
+    })() : {
       labels: {
         formatter: (val: number) => Math.round(val).toString(),
         style: { fontSize: '11px' }
@@ -490,7 +516,7 @@ const chartSeries = computed(() => {
       }
     ]
   } else {
-    return [
+    const series = [
       {
         name: t('chart.inputTokens'),
         data: dataPoints.map(dp => ({
@@ -506,6 +532,26 @@ const chartSeries = computed(() => {
         }))
       }
     ]
+    const hasCacheData = dataPoints.some(dp => (dp.cacheReadTokens || 0) > 0 || (dp.cacheCreationTokens || 0) > 0)
+    if (hasCacheData) {
+      series.push(
+        {
+          name: 'Cache Read',
+          data: dataPoints.map(dp => ({
+            x: new Date(dp.timestamp).getTime(),
+            y: dp.cacheReadTokens || 0
+          }))
+        },
+        {
+          name: 'Cache Write',
+          data: dataPoints.map(dp => ({
+            x: new Date(dp.timestamp).getTime(),
+            y: dp.cacheCreationTokens || 0
+          }))
+        }
+      )
+    }
+    return series
   }
 })
 

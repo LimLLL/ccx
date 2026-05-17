@@ -29,6 +29,10 @@
           <v-icon size="small" class="mr-1">mdi-chart-areaspline</v-icon>
           Token
         </v-btn>
+        <v-btn value="cache" size="x-small">
+          <v-icon size="small" class="mr-1">mdi-cached</v-icon>
+          {{ t('chart.cacheRw') }}
+        </v-btn>
       </v-btn-toggle>
     </div>
 
@@ -74,7 +78,7 @@ const props = defineProps<{
 }>()
 
 type Duration = '1h' | '6h' | '24h' | 'today'
-type ViewMode = 'requests' | 'tokens'
+type ViewMode = 'requests' | 'tokens' | 'cache'
 
 const theme = useTheme()
 const isDark = computed(() => theme.global.current.value.dark)
@@ -136,7 +140,11 @@ const chartSeries = computed(() => {
     name: m.name,
     data: m.points.map(p => ({
       x: new Date(p.timestamp).getTime(),
-      y: selectedView.value === 'requests' ? p.requestCount : p.inputTokens + p.outputTokens
+      y: selectedView.value === 'requests'
+        ? p.requestCount
+        : selectedView.value === 'tokens'
+          ? p.inputTokens + p.outputTokens
+          : (p.cacheReadTokens || 0) + (p.cacheCreationTokens || 0)
     }))
   }))
 })

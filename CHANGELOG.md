@@ -1,3 +1,13 @@
+## [Unreleased]
+
+### 新增
+
+- **缓存读写总统计** - 全局统计图表和模型统计图表新增缓存 Token 读写统计展示
+  - 后端：`ModelHistoryDataPoint` 新增 `cacheCreationTokens`/`cacheReadTokens` 字段；`GetModelStatsHistory` 和全局统计的模型分桶聚合逻辑补充缓存 Token 累加
+  - 前端 `GlobalStatsChart`：Summary cards 和 compact summary 新增缓存 R/W 统计（有数据时显示）；Tokens 图表视图动态添加 Cache Read/Write 系列线
+  - 前端 `ModelStatsChart`：新增 Cache 视图切换，展示按模型分组的缓存 Token 趋势
+  - 前端 `api.ts`：`ModelHistoryDataPoint` 类型补充缓存字段
+
 ## [v2.7.1] - 2026-05-17
 
 ### 新增
