@@ -1875,7 +1875,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgb(var(--v-theme-primary));
+  background: #040711 !important; /* 采用极具深邃感的暗黑虚空色，以最完美的对比度衬托流光 SVG 渐变 */
   border: 2px solid rgb(var(--v-theme-on-surface));
   box-shadow: 3px 3px 0 0 rgb(var(--v-theme-on-surface));
   margin-right: 8px;
