@@ -7,5 +7,7 @@ export {
 };
 
 export {
-    EnvFileState
+    EnvFileState,
+    UpdateInfo,
+    VersionInfo
 } from "./models.js";

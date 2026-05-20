@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useStatus } from '@/composables/useStatus'
+import { useUpdater } from '@/composables/useUpdater'
 import Logo from '@/components/layout/Logo.vue'
 import {
   Activity,
@@ -9,12 +10,14 @@ import {
   Globe,
   Play,
   Square,
-  Power
+  Power,
+  RefreshCw
 } from 'lucide-vue-next'
 
 const modelValue = defineModel<'status' | 'agent' | 'env' | 'web'>({ required: true })
 
 const { status, loading, autostartEnabled, startService, stopService, setAutostart } = useStatus()
+const { state: updaterState, check: checkUpdate } = useUpdater()
 
 const menuItems = [
   { id: 'status', label: '网关监控', icon: Activity, desc: '实时状态及核心日志' },
@@ -145,6 +148,22 @@ const handleDaemonAction = async () => {
             >
               <Power class="w-2.5 h-2.5" />
               <span>{{ autostartEnabled ? '已开启' : '已关闭' }}</span>
+            </button>
+          </div>
+          <div class="flex justify-between items-center">
+            <span>当前版本</span>
+            <button
+              @click="checkUpdate()"
+              :disabled="updaterState.checking"
+              :class="[
+                'flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all duration-200 cursor-pointer',
+                'bg-slate-900/80 text-slate-300 border-white/[0.02] hover:text-blue-400 hover:border-blue-500/20',
+                updaterState.checking && 'opacity-60 cursor-wait'
+              ]"
+              :title="updaterState.checking ? '检查中…' : '点击检查更新'"
+            >
+              <RefreshCw class="w-2.5 h-2.5" :class="updaterState.checking && 'animate-spin'" />
+              <span>v{{ updaterState.version?.version || '—' }}</span>
             </button>
           </div>
         </div>

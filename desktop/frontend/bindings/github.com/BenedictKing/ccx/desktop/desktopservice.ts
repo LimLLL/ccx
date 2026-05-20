@@ -20,9 +20,39 @@ export function ApplyAgentConfig(req: configservice$0.ApplyAgentConfigRequest): 
     return $Call.ByID(1194974726, req);
 }
 
+/**
+ * CancelUpdate 中止正在进行的下载/安装。
+ */
+export function CancelUpdate(): $CancellablePromise<void> {
+    return $Call.ByID(4179813658);
+}
+
+/**
+ * CheckUpdate 查询是否有新版本可用。
+ */
+export function CheckUpdate(): $CancellablePromise<$models.UpdateInfo> {
+    return $Call.ByID(3715642294).then(($result: any) => {
+        return $$createType0($result);
+    });
+}
+
+/**
+ * CopyText 把文本写入系统剪贴板。
+ */
+export function CopyText(text: string): $CancellablePromise<void> {
+    return $Call.ByID(2418202931, text);
+}
+
+/**
+ * DownloadAndInstall 下载、校验并触发安装。整个流程通过 update:progress 事件推送进度。
+ */
+export function DownloadAndInstall(info: $models.UpdateInfo): $CancellablePromise<void> {
+    return $Call.ByID(1836127345, info);
+}
+
 export function GetAgentConfigStatus(platform: string): $CancellablePromise<configservice$0.AgentConfigStatus> {
     return $Call.ByID(3013260948, platform).then(($result: any) => {
-        return $$createType0($result);
+        return $$createType1($result);
     });
 }
 
@@ -32,13 +62,13 @@ export function GetAutostartStatus(): $CancellablePromise<boolean> {
 
 export function GetEnvFile(): $CancellablePromise<$models.EnvFileState> {
     return $Call.ByID(4130444060).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType2($result);
     });
 }
 
 export function GetLogs(): $CancellablePromise<string[]> {
     return $Call.ByID(1688970508).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType3($result);
     });
 }
 
@@ -48,7 +78,16 @@ export function GetProxyAccessKey(): $CancellablePromise<string> {
 
 export function GetStatus(): $CancellablePromise<backend$0.Status> {
     return $Call.ByID(2036427713).then(($result: any) => {
-        return $$createType3($result);
+        return $$createType4($result);
+    });
+}
+
+/**
+ * GetVersion 返回构建时注入的版本信息。
+ */
+export function GetVersion(): $CancellablePromise<$models.VersionInfo> {
+    return $Call.ByID(3507009081).then(($result: any) => {
+        return $$createType5($result);
     });
 }
 
@@ -96,8 +135,17 @@ export function StopService(): $CancellablePromise<void> {
     return $Call.ByID(2326025444);
 }
 
+/**
+ * WebURL 返回当前网关 Web UI 的访问地址（即使服务未启动，也基于配置端口拼接）。
+ */
+export function WebURL(): $CancellablePromise<string> {
+    return $Call.ByID(14751362);
+}
+
 // Private type creation functions
-const $$createType0 = configservice$0.AgentConfigStatus.createFrom;
-const $$createType1 = $models.EnvFileState.createFrom;
-const $$createType2 = $Create.Array($Create.Any);
-const $$createType3 = backend$0.Status.createFrom;
+const $$createType0 = $models.UpdateInfo.createFrom;
+const $$createType1 = configservice$0.AgentConfigStatus.createFrom;
+const $$createType2 = $models.EnvFileState.createFrom;
+const $$createType3 = $Create.Array($Create.Any);
+const $$createType4 = backend$0.Status.createFrom;
+const $$createType5 = $models.VersionInfo.createFrom;

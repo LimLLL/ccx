@@ -23,7 +23,8 @@ tasks:
       - cmd: rm -f *.syso
         platforms: [linux, darwin]
     vars:
-      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui"{{else}}-buildvcs=false -gcflags=all="-l"{{end}}'
+      VERSION_LDFLAGS: '-X main.Version={{.BUILD_VERSION | default "dev"}} -X main.BuildTime={{.BUILD_TIME | default "unknown"}} -X main.GitCommit={{.GIT_COMMIT | default "unknown"}}'
+      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui {{.VERSION_LDFLAGS}}"{{else}}-buildvcs=false -gcflags=all="-l" -ldflags="{{.VERSION_LDFLAGS}}"{{end}}'
     env:
       GOOS: windows
       CGO_ENABLED: 0
@@ -52,6 +53,12 @@ tasks:
       - task: build
         vars:
           PRODUCTION: "true"
+          BUILD_VERSION:
+            ref: .BUILD_VERSION
+          BUILD_TIME:
+            ref: .BUILD_TIME
+          GIT_COMMIT:
+            ref: .GIT_COMMIT
     cmds:
       # Create the Microsoft WebView2 bootstrapper if it doesn't exist
       - wails3 generate webview2bootstrapper -dir "{{.ROOT_DIR}}/build/windows/nsis"

@@ -64,6 +64,41 @@ jobs:
           shasum -a 256 ccx-darwin-arm64 | awk '{print $1}' > ccx-darwin-arm64.sha256
           shasum -a 256 ccx-darwin-amd64 | awk '{print $1}' > ccx-darwin-amd64.sha256
 
+      - name: Install Wails3 CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.92
+
+      - name: Install Desktop Frontend Deps
+        run: bun install --frozen-lockfile
+        working-directory: ./desktop/frontend
+
+      - name: Build Desktop arm64 DMG
+        env:
+          BUILD_VERSION: ${{ github.ref_name }}
+          GIT_COMMIT: ${{ github.sha }}
+        run: |
+          BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+          VERSION="${BUILD_VERSION#v}"
+          wails3 task darwin:package ARCH=arm64 BUILD_VERSION="${VERSION}" BUILD_TIME="${BUILD_TIME}" GIT_COMMIT="${GIT_COMMIT}"
+          rm -f "bin/CCX Desktop-arm64.dmg" || true
+          hdiutil create -volname "CCX Desktop" -srcfolder "bin/CCX Desktop.app" -ov -format UDZO "bin/CCX-Desktop-${VERSION}-darwin-arm64.dmg"
+          shasum -a 256 "bin/CCX-Desktop-${VERSION}-darwin-arm64.dmg" | awk '{print $1}' > "bin/CCX-Desktop-${VERSION}-darwin-arm64.dmg.sha256"
+          rm -rf "bin/CCX Desktop.app"
+        working-directory: ./desktop
+
+      - name: Build Desktop amd64 DMG
+        env:
+          BUILD_VERSION: ${{ github.ref_name }}
+          GIT_COMMIT: ${{ github.sha }}
+        run: |
+          BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+          VERSION="${BUILD_VERSION#v}"
+          wails3 task darwin:package ARCH=amd64 BUILD_VERSION="${VERSION}" BUILD_TIME="${BUILD_TIME}" GIT_COMMIT="${GIT_COMMIT}"
+          rm -f "bin/CCX Desktop-amd64.dmg" || true
+          hdiutil create -volname "CCX Desktop" -srcfolder "bin/CCX Desktop.app" -ov -format UDZO "bin/CCX-Desktop-${VERSION}-darwin-amd64.dmg"
+          shasum -a 256 "bin/CCX-Desktop-${VERSION}-darwin-amd64.dmg" | awk '{print $1}' > "bin/CCX-Desktop-${VERSION}-darwin-amd64.dmg.sha256"
+          rm -rf "bin/CCX Desktop.app"
+        working-directory: ./desktop
+
       - name: Release
         uses: softprops/action-gh-release@v2.0.5
         if: startsWith(github.ref, 'refs/tags/')
@@ -73,6 +108,10 @@ jobs:
             backend-go/ccx-darwin-amd64
             backend-go/ccx-darwin-arm64.sha256
             backend-go/ccx-darwin-amd64.sha256
+            desktop/bin/CCX-Desktop-*-darwin-arm64.dmg
+            desktop/bin/CCX-Desktop-*-darwin-amd64.dmg
+            desktop/bin/CCX-Desktop-*-darwin-arm64.dmg.sha256
+            desktop/bin/CCX-Desktop-*-darwin-amd64.dmg.sha256
           draft: true
           generate_release_notes: true
         env:

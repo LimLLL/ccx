@@ -18,7 +18,8 @@ tasks:
     cmds:
       - go build {{.BUILD_FLAGS}} -o {{.OUTPUT}}
     vars:
-      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -buildvcs=false -ldflags="-w -s"{{else}}-buildvcs=false -gcflags=all="-l"{{end}}'
+      VERSION_LDFLAGS: '-X main.Version={{.BUILD_VERSION | default "dev"}} -X main.BuildTime={{.BUILD_TIME | default "unknown"}} -X main.GitCommit={{.GIT_COMMIT | default "unknown"}}'
+      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -buildvcs=false -ldflags="-w -s {{.VERSION_LDFLAGS}}"{{else}}-buildvcs=false -gcflags=all="-l" -ldflags="{{.VERSION_LDFLAGS}}"{{end}}'
       DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
       OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
     env:
@@ -51,6 +52,12 @@ tasks:
       - task: build
         vars:
           PRODUCTION: "true"
+          BUILD_VERSION:
+            ref: .BUILD_VERSION
+          BUILD_TIME:
+            ref: .BUILD_TIME
+          GIT_COMMIT:
+            ref: .GIT_COMMIT
     cmds:
       - task: create:app:bundle
 

@@ -5,11 +5,14 @@ import StatusTab from '@/components/status/StatusTab.vue'
 import AgentTab from '@/components/agent/AgentTab.vue'
 import EnvTab from '@/components/env/EnvTab.vue'
 import WebUITab from '@/components/webui/WebUITab.vue'
+import UpdateDialog from '@/components/update/UpdateDialog.vue'
 import { useStatus } from '@/composables/useStatus'
+import { useUpdater } from '@/composables/useUpdater'
 import { useWailsEvents } from '@/composables/useWailsEvents'
 
 const activeTab = ref<'status' | 'agent' | 'env' | 'web'>('status')
 const { status, actionError, syncStatus } = useStatus()
+useUpdater()
 
 useWailsEvents(activeTab, actionError, syncStatus)
 
@@ -86,5 +89,7 @@ const tabTitles: Record<typeof activeTab.value, string> = {
         </div>
       </div>
     </main>
+
+    <UpdateDialog />
   </div>
 </template>

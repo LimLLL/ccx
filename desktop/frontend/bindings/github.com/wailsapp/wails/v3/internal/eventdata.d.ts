@@ -5,11 +5,16 @@
 // @ts-ignore: Unused imports
 import type { Events } from "@wailsio/runtime";
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import type * as main$0 from "../../../../BenedictKing/ccx/desktop/models.js";
+
 declare module "@wailsio/runtime" {
     namespace Events {
         interface CustomEvents {
             "desktop:show-tab": string;
             "desktop:tray-error": string;
+            "update:available": main$0.UpdateInfo;
         }
     }
 }

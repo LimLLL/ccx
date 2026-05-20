@@ -67,6 +67,45 @@ jobs:
           sha256sum ccx-windows-amd64.exe | awk '{print $1}' > ccx-windows-amd64.exe.sha256
           sha256sum ccx-windows-arm64.exe | awk '{print $1}' > ccx-windows-arm64.exe.sha256
 
+      - name: Install Wails3 CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.92
+
+      - name: Install Desktop Frontend Deps
+        run: bun install --frozen-lockfile
+        working-directory: ./desktop/frontend
+
+      - name: Build Desktop amd64 NSIS
+        env:
+          BUILD_VERSION: ${{ github.ref_name }}
+          GIT_COMMIT: ${{ github.sha }}
+        run: |
+          BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+          VERSION="${BUILD_VERSION#v}"
+          wails3 task windows:package ARCH=amd64 BUILD_VERSION="${VERSION}" BUILD_TIME="${BUILD_TIME}" GIT_COMMIT="${GIT_COMMIT}"
+          INSTALLER=$(ls bin/*-installer*.exe 2>/dev/null | head -1)
+          if [ -z "$INSTALLER" ]; then
+            INSTALLER=$(ls bin/*.exe | grep -v "CCX Desktop.exe" | head -1)
+          fi
+          mv "$INSTALLER" "bin/CCX-Desktop-${VERSION}-windows-amd64-setup.exe"
+          sha256sum "bin/CCX-Desktop-${VERSION}-windows-amd64-setup.exe" | awk '{print $1}' > "bin/CCX-Desktop-${VERSION}-windows-amd64-setup.exe.sha256"
+        working-directory: ./desktop
+
+      - name: Build Desktop arm64 NSIS
+        env:
+          BUILD_VERSION: ${{ github.ref_name }}
+          GIT_COMMIT: ${{ github.sha }}
+        run: |
+          BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+          VERSION="${BUILD_VERSION#v}"
+          wails3 task windows:package ARCH=arm64 BUILD_VERSION="${VERSION}" BUILD_TIME="${BUILD_TIME}" GIT_COMMIT="${GIT_COMMIT}"
+          INSTALLER=$(ls bin/*-installer*.exe 2>/dev/null | head -1)
+          if [ -z "$INSTALLER" ]; then
+            INSTALLER=$(ls bin/*.exe | grep -v "CCX Desktop.exe" | grep -v "windows-amd64" | head -1)
+          fi
+          mv "$INSTALLER" "bin/CCX-Desktop-${VERSION}-windows-arm64-setup.exe"
+          sha256sum "bin/CCX-Desktop-${VERSION}-windows-arm64-setup.exe" | awk '{print $1}' > "bin/CCX-Desktop-${VERSION}-windows-arm64-setup.exe.sha256"
+        working-directory: ./desktop
+
       - name: Release
         uses: softprops/action-gh-release@v2.0.5
         if: startsWith(github.ref, 'refs/tags/')
@@ -76,6 +115,10 @@ jobs:
             backend-go/ccx-windows-arm64.exe
             backend-go/ccx-windows-amd64.exe.sha256
             backend-go/ccx-windows-arm64.exe.sha256
+            desktop/bin/CCX-Desktop-*-windows-amd64-setup.exe
+            desktop/bin/CCX-Desktop-*-windows-arm64-setup.exe
+            desktop/bin/CCX-Desktop-*-windows-amd64-setup.exe.sha256
+            desktop/bin/CCX-Desktop-*-windows-arm64-setup.exe.sha256
           draft: true
           generate_release_notes: true
         env:
