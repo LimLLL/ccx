@@ -11,6 +11,9 @@
 
 ### 修复
 
+- **SUBSCRIPTION_NOT_FOUND 余额不足故障转移**：
+  - 将 `SUBSCRIPTION_NOT_FOUND` 错误码和 `"no active subscription found"` 错误信息识别为余额不足（`insufficient_balance`），从而正确触发渠道黑名单和故障转移。
+  - 在 `failover_test.go` 和 `stream_test.go` 中补充了对应的普通请求与流式请求测试用例。
 - **Gemini 渠道 tool_result 数组解析报错**：
   - 修复了 `messages` 接口转上游 `gemini` 类型渠道时，`tool_result` 包含数组（Content Blocks）导致的反序列化报错问题。
   - 将 `GeminiFunctionResponse.Response` 字段类型从 `map[string]interface{}` 变更为 `interface{}`，提高结构体容错性。
