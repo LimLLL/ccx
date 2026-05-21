@@ -383,11 +383,37 @@ func TestPreflightStreamEvents_ThinkingStartOnlyIsEmpty(t *testing.T) {
 	}
 }
 
-func TestPreflightStreamEvents_ThinkingDeltaNotEmpty(t *testing.T) {
+func TestPreflightStreamEvents_ThinkingDeltaOnlyIsEmpty(t *testing.T) {
 	events := []string{
 		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_test\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-sonnet-4-20250514\",\"usage\":{\"input_tokens\":100,\"output_tokens\":1}}}\n\n",
 		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"thinking\",\"thinking\":\"\"}}\n\n",
 		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\"analysis\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\n",
+		"event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
+	}
+
+	eventChan := make(chan string, len(events))
+	errChan := make(chan error)
+	for _, e := range events {
+		eventChan <- e
+	}
+	close(eventChan)
+	close(errChan)
+
+	result := PreflightStreamEvents(eventChan, errChan)
+	if !result.IsEmpty {
+		t.Errorf("thinking-only response should be detected as empty, got IsEmpty=false")
+	}
+}
+
+func TestPreflightStreamEvents_ThinkingThenTextNotEmpty(t *testing.T) {
+	events := []string{
+		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_test\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-sonnet-4-20250514\",\"usage\":{\"input_tokens\":100,\"output_tokens\":1}}}\n\n",
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"thinking\",\"thinking\":\"\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\"analysis\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\n",
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":1,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":1,\"delta\":{\"type\":\"text_delta\",\"text\":\"answer\"}}\n\n",
 		"event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
 	}
 
@@ -401,7 +427,7 @@ func TestPreflightStreamEvents_ThinkingDeltaNotEmpty(t *testing.T) {
 
 	result := PreflightStreamEvents(eventChan, errChan)
 	if result.IsEmpty {
-		t.Errorf("thinking delta response should NOT be detected as empty, got IsEmpty=true")
+		t.Errorf("thinking + text response should NOT be detected as empty, got IsEmpty=true")
 	}
 }
 

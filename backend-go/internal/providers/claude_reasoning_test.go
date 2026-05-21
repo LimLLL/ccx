@@ -156,7 +156,7 @@ func TestStripThinkingBlocksFromBody(t *testing.T) {
 	}
 }
 
-// TestConvertThinkingToReasoningContent 测试为缺少 thinking 块的 assistant 消息注入占位 thinking 块
+// TestConvertThinkingToReasoningContent 测试保留真实 thinking 并清理历史占位 thinking
 func TestConvertThinkingToReasoningContent(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -190,7 +190,7 @@ func TestConvertThinkingToReasoningContent(t *testing.T) {
 			},
 		},
 		{
-			name: "无 thinking 块的 assistant 消息注入占位 thinking 块",
+			name: "无 thinking 块的 assistant 消息保持不变",
 			input: `{
 				"model": "mimo-v2.5-pro",
 				"messages": [
@@ -208,11 +208,61 @@ func TestConvertThinkingToReasoningContent(t *testing.T) {
 					map[string]interface{}{
 						"role": "assistant",
 						"content": []interface{}{
-							map[string]interface{}{"type": "thinking", "thinking": "(no prior reasoning recorded)"},
 							map[string]interface{}{"type": "text", "text": "answer"},
 							map[string]interface{}{"type": "tool_use", "id": "toolu_1", "name": "Bash", "input": map[string]interface{}{"command": "pwd"}},
 						},
 					},
+				},
+			},
+		},
+		{
+			name: "历史占位 thinking 块会被移除",
+			input: `{
+				"model": "mimo-v2.5-pro",
+				"messages": [
+					{"role": "user", "content": [{"type": "text", "text": "hello"}]},
+					{"role": "assistant", "content": [
+						{"type": "thinking", "thinking": "(no prior reasoning recorded)"},
+						{"type": "text", "text": "answer"}
+					]}
+				]
+			}`,
+			wantJSON: map[string]interface{}{
+				"model": "mimo-v2.5-pro",
+				"messages": []interface{}{
+					map[string]interface{}{"role": "user", "content": []interface{}{map[string]interface{}{"type": "text", "text": "hello"}}},
+					map[string]interface{}{
+						"role": "assistant",
+						"content": []interface{}{
+							map[string]interface{}{"type": "text", "text": "answer"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "只有历史占位 thinking 的 assistant 消息转为非空占位 text",
+			input: `{
+				"model": "mimo-v2.5-pro",
+				"messages": [
+					{"role": "user", "content": [{"type": "text", "text": "hello"}]},
+					{"role": "assistant", "content": [
+						{"type": "thinking", "thinking": "(no prior reasoning recorded)"}
+					]},
+					{"role": "user", "content": [{"type": "text", "text": "next"}]}
+				]
+			}`,
+			wantJSON: map[string]interface{}{
+				"model": "mimo-v2.5-pro",
+				"messages": []interface{}{
+					map[string]interface{}{"role": "user", "content": []interface{}{map[string]interface{}{"type": "text", "text": "hello"}}},
+					map[string]interface{}{
+						"role": "assistant",
+						"content": []interface{}{
+							map[string]interface{}{"type": "text", "text": missingAssistantResponseText},
+						},
+					},
+					map[string]interface{}{"role": "user", "content": []interface{}{map[string]interface{}{"type": "text", "text": "next"}}},
 				},
 			},
 		},

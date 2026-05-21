@@ -49,14 +49,18 @@ func redirectModelInBody(bodyBytes []byte, upstream *config.UpstreamConfig) []by
 	return newBytes
 }
 
-// convertThinkingToReasoningContent 为缺少 thinking 块的 assistant 消息注入占位 thinking 块
-// 用于兼容 mimo 等开启 thinking mode 的 Claude 协议上游：
-//   - mimo 要求历史 assistant 消息必须带 thinking 块，否则返回 400
-//     "The reasoning_content in the thinking mode must be passed back to the API"
-//   - 已有 thinking 块（来自 mimo 上一轮响应）则保持原样
-//   - 缺少 thinking 块（来自非 thinking 渠道历史）则注入占位块以通过校验
+const (
+	legacyThinkingPlaceholder    = "(no prior reasoning recorded)"
+	missingAssistantResponseText = "[prior assistant response unavailable]"
+)
+
+// convertThinkingToReasoningContent 保留真实 thinking 回传，并清理历史版本注入的占位 thinking。
 //
-// 注：函数名保留以维持向后兼容，实际行为已改为注入而非"转换"
+// MiMo 的要求是：开启 thinking mode 后，必须把上游真实返回的 reasoning/thinking 在后续请求中回传。
+// 这里不能为缺少 thinking 的历史 assistant 消息伪造占位内容；否则 MiMo 可能把正式回答续写进
+// 这个假 thinking 块，导致下游只收到 thinking 而没有 text content block。
+//
+// 注：函数名保留以维持向后兼容。
 func convertThinkingToReasoningContent(bodyBytes []byte) []byte {
 	decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
 	decoder.UseNumber()
@@ -72,44 +76,59 @@ func convertThinkingToReasoningContent(bodyBytes []byte) []byte {
 	}
 
 	modified := false
+	filteredMessages := make([]interface{}, 0, len(messages))
 	for _, msg := range messages {
 		msgMap, ok := msg.(map[string]interface{})
 		if !ok {
+			filteredMessages = append(filteredMessages, msg)
 			continue
 		}
 
 		if role, _ := msgMap["role"].(string); role != "assistant" {
+			filteredMessages = append(filteredMessages, msgMap)
 			continue
 		}
 
 		content, ok := msgMap["content"].([]interface{})
 		if !ok {
+			filteredMessages = append(filteredMessages, msgMap)
 			continue
 		}
 
-		hasThinking := false
+		filteredContent := make([]interface{}, 0, len(content))
 		for _, block := range content {
-			if blockMap, ok := block.(map[string]interface{}); ok {
-				if blockType, _ := blockMap["type"].(string); blockType == "thinking" {
-					hasThinking = true
-					break
-				}
+			blockMap, ok := block.(map[string]interface{})
+			if !ok {
+				filteredContent = append(filteredContent, block)
+				continue
 			}
+
+			blockType, _ := blockMap["type"].(string)
+			thinking, _ := blockMap["thinking"].(string)
+			if blockType == "thinking" && thinking == legacyThinkingPlaceholder {
+				modified = true
+				continue
+			}
+
+			filteredContent = append(filteredContent, blockMap)
 		}
 
-		if !hasThinking {
-			placeholder := map[string]interface{}{
-				"type":     "thinking",
-				"thinking": "(no prior reasoning recorded)",
+		if len(filteredContent) != len(content) {
+			if len(filteredContent) == 0 {
+				filteredContent = []interface{}{map[string]interface{}{
+					"type": "text",
+					"text": missingAssistantResponseText,
+				}}
 			}
-			msgMap["content"] = append([]interface{}{placeholder}, content...)
-			modified = true
+			msgMap["content"] = filteredContent
 		}
+		filteredMessages = append(filteredMessages, msgMap)
 	}
 
 	if !modified {
 		return bodyBytes
 	}
+	data["messages"] = filteredMessages
 
 	newBytes, err := utils.MarshalJSONNoEscape(data)
 	if err != nil {

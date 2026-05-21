@@ -455,7 +455,7 @@ func isEmptyContent(text string) bool {
 }
 
 func isEmptyStreamContent(text string, thinking string) bool {
-	return IsEffectivelyEmptyStreamText(text) && IsEffectivelyEmptyStreamText(thinking)
+	return IsEffectivelyEmptyStreamText(text)
 }
 
 // IsEffectivelyEmptyStreamText 判断流式响应文本是否仍可视为“空”
