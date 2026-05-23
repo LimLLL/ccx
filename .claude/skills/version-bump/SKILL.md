@@ -309,34 +309,34 @@ git push origin v{新版本号}
 
 ## GitHub Actions 集成
 
-当推送 `v*` 格式的 tag 时，会自动触发以下 workflow：
+当推送 `v*` 格式的 tag 时，会自动触发 `release.yml` workflow，在三平台并行编译：
 
-| Workflow              | Runner         | 产物                                                               |
-| --------------------- | -------------- | ------------------------------------------------------------------ |
-| `release-linux.yml`   | ubuntu-latest  | `ccx-linux-amd64`, `ccx-linux-arm64`             |
-| `release-macos.yml`   | macos-latest   | `ccx-darwin-amd64`, `ccx-darwin-arm64`           |
-| `release-windows.yml` | windows-latest | `ccx-windows-amd64.exe`, `ccx-windows-arm64.exe` |
-| `docker-build.yml`    | ubuntu-latest  | Docker 镜像 (阿里云容器镜像服务, linux/amd64 + linux/arm64)        |
+| Job               | Runner              | 产物                                                      |
+| ----------------- | ------------------- | --------------------------------------------------------- |
+| `build-macos`     | macos-latest        | `ccx-darwin-arm64`, `ccx-darwin-amd64`, DMG 安装包        |
+| `build-windows`   | windows-latest      | `ccx-windows-amd64.exe`, `ccx-windows-arm64.exe`, NSIS 安装包 |
+| `build-linux`     | ubuntu-latest       | `ccx-linux-amd64`, `ccx-linux-arm64`, AppImage            |
+| `build-linux-arm64-desktop` | ubuntu-24.04-arm | `CCX-Desktop-linux-arm64.AppImage`              |
+| `docker-build`    | ubuntu-latest       | Docker 镜像 (阿里云容器镜像服务, linux/amd64 + linux/arm64) |
 
 ### Concurrency 配置
 
-每个 release workflow 使用独立的 concurrency group，确保三个平台**并行编译**：
+构建 job 使用独立的 concurrency group，确保三平台**并行编译**：
 
 ```yaml
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 ```
 
-- `${{ github.workflow }}` 使用 workflow 名称作为前缀，避免不同平台的构建相互阻塞
 - `cancel-in-progress: false` 确保发布构建不会被取消
 
 ### 发布内容
 
-- 6 个平台的可执行文件（三平台并行构建）
-- 自动生成的 Release Notes
+- 6 个平台的可执行文件 + 安装包（三平台并行构建）
+- 各平台 checksum + cosign 签名文件
 - Docker 镜像（推送到阿里云容器镜像服务）
-- 发布为 **draft** 模式，需手动确认发布
+- 发布为 **draft** 模式，需在 GitHub Releases 页面手动确认发布
 
 ## 注意事项
 
@@ -346,5 +346,6 @@ concurrency:
 - 遵循 Conventional Commits 规范，使用 `chore: bump version` 格式
 - **编译验证是强制步骤**：commit 后必须通过 `make test` 和 `make build`，否则不允许创建 tag 和推送
 - 编译验证失败时，已提交的 commit 保留在本地，用户修复后可手动推送
-- 推送 tag 后，GitHub Actions 需要几分钟完成编译和发布
-- 可以在 GitHub Actions 页面查看构建进度
+- 推送 tag 后，GitHub Actions 需要几分钟完成编译
+- 可在 GitHub Actions 页面查看构建进度
+- 所有构建完成后，draft release 会包含全部平台产物，需手动确认发布
