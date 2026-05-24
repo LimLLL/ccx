@@ -67,7 +67,7 @@ const applyLabel = computed(() => '应用配置')
         <div v-for="detail in [
           { label: '当前 Provider', value: (platform === 'codex' ? codexProviderLabel : claudeProviderLabel)?.(agentStatus?.provider) || agentStatus?.provider || '未设置' },
           { label: '当前 URL', value: agentStatus?.currentBaseUrl || '未设置' },
-          { label: '目标 URL', value: platform === 'claude' ? claudeTargetBaseUrl?.() : agentStatus?.targetBaseUrl || '-' },
+          { label: '目标 URL', value: platform === 'claude' ? claudeTargetBaseUrl?.() : (platform === 'codex' && selectedCodexProvider === 'openai' ? '-' : (agentStatus?.targetBaseUrl || '-')) },
           { label: '配置文件', value: agentStatus?.configPath || '--' },
         ]" :key="detail.label" class="flex items-center justify-between">
           <span class="text-muted-foreground">{{ detail.label }}</span>
