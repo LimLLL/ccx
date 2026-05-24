@@ -19,6 +19,7 @@ const claudeProviderLabels: Record<AgentProvider | 'custom', string> = {
   kimi: 'Kimi',
   glm: 'GLM',
   minimax: 'MiniMax',
+  dashscope: 'DashScope',
   openai: 'OpenAI',
   custom: '自定义',
 }
@@ -31,6 +32,7 @@ const codexProviderLabels: Record<AgentProvider | 'custom', string> = {
   kimi: 'Kimi',
   glm: 'GLM',
   minimax: 'MiniMax',
+  dashscope: 'DashScope',
   custom: '自定义',
 }
 
@@ -50,6 +52,7 @@ const claudeProviderKeys = ref<Record<AgentProvider, string>>({
   kimi: '',
   glm: '',
   minimax: '',
+  dashscope: '',
   openai: '',
 })
 const savedProviderKeys = ref<Record<string, string>>({})
@@ -59,7 +62,7 @@ const selectedMiMoPlan = ref('https://api.xiaomimimo.com/anthropic')
 const selectedCodexProvider = ref<AgentProvider>('ccx')
 
 const isClaudeProvider = (value?: string): value is AgentProvider => {
-  return value === 'ccx' || value === 'deepseek' || value === 'mimo' || value === 'kimi' || value === 'glm' || value === 'minimax'
+  return value === 'ccx' || value === 'deepseek' || value === 'mimo' || value === 'kimi' || value === 'glm' || value === 'minimax' || value === 'dashscope'
 }
 
 const claudeProviderLabel = (value?: string) => {
@@ -86,6 +89,8 @@ const claudeTargetBaseUrl = () => {
       return 'https://open.bigmodel.cn/api/anthropic'
     case 'minimax':
       return 'https://api.minimaxi.com/anthropic'
+    case 'dashscope':
+      return 'https://dashscope.aliyuncs.com/apps/anthropic'
     default:
       return ''
   }

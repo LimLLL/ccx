@@ -6,11 +6,12 @@ import (
 )
 
 const (
-	ProviderDeepSeek = "deepseek"
-	ProviderMiMo     = "mimo"
-	ProviderKimi     = "kimi"
-	ProviderGLM      = "glm"
-	ProviderMiniMax  = "minimax"
+	ProviderDeepSeek  = "deepseek"
+	ProviderMiMo      = "mimo"
+	ProviderKimi      = "kimi"
+	ProviderGLM       = "glm"
+	ProviderMiniMax   = "minimax"
+	ProviderDashScope = "dashscope"
 
 	TargetMessages  = "messages"
 	TargetChat      = "chat"
@@ -195,6 +196,25 @@ func Presets() []ProviderPreset {
 			Plans: []ProviderPlan{
 				{ID: "anthropic", Label: "Anthropic-compatible", BaseURL: "https://api.minimaxi.com/anthropic", Description: "Claude Messages 原生入口", Recommended: true},
 				{ID: "openai-chat", Label: "OpenAI-compatible", BaseURL: "https://api.minimax.chat/v1", Description: "MiniMax OpenAI 兼容入口"},
+			},
+			Targets: []ChannelTarget{
+				{Type: TargetMessages, Label: "Messages 原生透传", Description: "Claude Code 直连或 CCX messages 渠道", Recommended: true},
+				{Type: TargetResponses, Label: "Codex Responses", Description: "OpenAI Responses 协议，供 Codex 使用"},
+				{Type: TargetChat, Label: "Chat 渠道透传", Description: "OpenAI Chat 协议，供 Chat 客户端使用"},
+			},
+			DefaultTarget: TargetMessages,
+		},
+		{
+			ID:                  ProviderDashScope,
+			Label:               "阿里云 DashScope",
+			Description:         "Messages 原生透传、Codex Responses、Chat 渠道透传三种用法。",
+			DirectAgent:         true,
+			NativeMessages:      true,
+			ChatCompatible:      true,
+			ResponsesCompatible: true,
+			Plans: []ProviderPlan{
+				{ID: "anthropic", Label: "Anthropic-compatible", BaseURL: "https://dashscope.aliyuncs.com/apps/anthropic", Description: "Claude Messages 原生入口", Recommended: true},
+				{ID: "openai-chat", Label: "OpenAI-compatible", BaseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1#", Description: "DashScope OpenAI 兼容入口"},
 			},
 			Targets: []ChannelTarget{
 				{Type: TargetMessages, Label: "Messages 原生透传", Description: "Claude Code 直连或 CCX messages 渠道", Recommended: true},
@@ -417,6 +437,12 @@ func applyTargetDefaults(payload *ChannelPayload, provider string, target string
 				"sonnet": "MiniMax-M2.7",
 			}
 			payload.PassbackReasoningContent = true
+		case ProviderDashScope:
+			payload.ModelMapping = map[string]string{
+				"haiku":  "qwen3.6-plus",
+				"opus":   "qwen3.6-plus",
+				"sonnet": "qwen3.6-plus",
+			}
 		}
 	case TargetChat:
 		payload.ServiceType = "openai"
@@ -436,6 +462,8 @@ func applyTargetDefaults(payload *ChannelPayload, provider string, target string
 		case ProviderGLM:
 		case ProviderMiniMax:
 			payload.ModelMapping = map[string]string{"gpt": "MiniMax-M2.7"}
+		case ProviderDashScope:
+			payload.ModelMapping = map[string]string{"gpt": "qwen3.6-plus"}
 		}
 	case TargetResponses:
 		payload.ServiceType = "openai"
@@ -468,6 +496,8 @@ func applyTargetDefaults(payload *ChannelPayload, provider string, target string
 			payload.CodexToolCompat = false
 			payload.StripCodexClientTools = false
 			payload.CodexNativeToolPassthrough = true
+		case ProviderDashScope:
+			payload.ModelMapping = map[string]string{"gpt": "qwen3.6-plus"}
 		}
 	}
 }

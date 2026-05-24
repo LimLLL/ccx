@@ -72,6 +72,7 @@ const keyPlaceholder = (provider: AgentProvider) => {
         <option value="kimi">Kimi 直连</option>
         <option value="glm">GLM 直连</option>
         <option value="minimax">MiniMax 直连</option>
+        <option value="dashscope">DashScope 直连</option>
       </select>
     </div>
 

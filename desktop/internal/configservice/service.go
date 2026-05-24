@@ -17,10 +17,11 @@ const (
 	ProviderCCX      = "ccx"
 	ProviderDeepSeek = "deepseek"
 	ProviderMiMo     = "mimo"
-	ProviderKimi     = "kimi"
-	ProviderGLM      = "glm"
-	ProviderMiniMax  = "minimax"
-	ProviderCustom   = "custom"
+	ProviderKimi      = "kimi"
+	ProviderGLM       = "glm"
+	ProviderMiniMax   = "minimax"
+	ProviderDashScope = "dashscope"
+	ProviderCustom    = "custom"
 	ProviderOpenAI   = "openai"
 
 	deepSeekClaudeBaseURL = "https://api.deepseek.com/anthropic"
@@ -28,6 +29,7 @@ const (
 	kimiClaudeBaseURL     = "https://api.moonshot.cn/anthropic"
 	glmClaudeBaseURL      = "https://open.bigmodel.cn/api/anthropic"
 	miniMaxClaudeBaseURL  = "https://api.minimaxi.com/anthropic"
+	dashScopeClaudeBaseURL = "https://dashscope.aliyuncs.com/apps/anthropic"
 	stateVersion          = 1
 )
 
@@ -687,6 +689,8 @@ func normalizeClaudeProvider(provider string) string {
 		return ProviderGLM
 	case ProviderMiniMax:
 		return ProviderMiniMax
+	case ProviderDashScope:
+		return ProviderDashScope
 	default:
 		return provider
 	}
@@ -753,6 +757,16 @@ func resolveClaudeProvider(req ApplyAgentConfigRequest, port int, accessKey stri
 			baseURL = miniMaxClaudeBaseURL
 		}
 		return baseURL, "", apiKey, nil
+	case ProviderDashScope:
+		apiKey := strings.TrimSpace(req.APIKey)
+		if apiKey == "" {
+			return "", "", "", fmt.Errorf("DashScope API Key 不能为空")
+		}
+		baseURL := strings.TrimSpace(req.BaseURL)
+		if baseURL == "" {
+			baseURL = dashScopeClaudeBaseURL
+		}
+		return baseURL, "", apiKey, nil
 	default:
 		return "", "", "", fmt.Errorf("不支持的 Claude Code provider: %s", provider)
 	}
@@ -775,6 +789,8 @@ func detectClaudeProvider(baseURL string) string {
 		return ProviderGLM
 	case strings.Contains(value, "minimaxi.com") || strings.Contains(value, "minimax.chat"):
 		return ProviderMiniMax
+	case strings.Contains(value, "dashscope.aliyuncs.com"):
+		return ProviderDashScope
 	default:
 		return ProviderCustom
 	}

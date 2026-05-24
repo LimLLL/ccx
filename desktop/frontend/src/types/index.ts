@@ -28,7 +28,7 @@ export type DesktopStatus = {
 }
 
 export type AgentPlatform = 'claude' | 'codex'
-export type AgentProvider = 'ccx' | 'deepseek' | 'mimo' | 'kimi' | 'glm' | 'minimax' | 'openai'
+export type AgentProvider = 'ccx' | 'deepseek' | 'mimo' | 'kimi' | 'glm' | 'minimax' | 'dashscope' | 'openai'
 
 export type AgentConfigStatus = {
   platform: AgentPlatform
