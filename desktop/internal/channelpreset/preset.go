@@ -137,15 +137,14 @@ func Presets() []ProviderPreset {
 			ChatCompatible:      true,
 			ResponsesCompatible: true,
 			Plans: []ProviderPlan{
-				{ID: "anthropic", Label: "Anthropic-compatible", BaseURL: "https://api.xiaomimimo.com/anthropic", Description: "Messages 原生入口", Recommended: true},
-				{ID: "openai-chat", Label: "OpenAI-compatible", BaseURL: "https://api.xiaomimimo.com/v1", Description: "Chat / Responses 通用入口"},
+				{ID: "anthropic", Label: "按量 - Anthropic 入口", BaseURL: "https://api.xiaomimimo.com/anthropic", Description: "Messages 原生入口", Recommended: true},
+				{ID: "openai-chat", Label: "按量 - OpenAI 入口", BaseURL: "https://api.xiaomimimo.com/v1", Description: "Chat / Responses 通用入口"},
 				{ID: "token-cn", Label: "Token Plan - 中国", BaseURL: "https://token-plan-cn.xiaomimimo.com/v1", Description: "中国区订阅套餐"},
 				{ID: "token-sgp", Label: "Token Plan - 新加坡", BaseURL: "https://token-plan-sgp.xiaomimimo.com/v1", Description: "新加坡区订阅套餐"},
 				{ID: "token-ams", Label: "Token Plan - 欧洲", BaseURL: "https://token-plan-ams.xiaomimimo.com/v1", Description: "欧洲区订阅套餐"},
 				{ID: "token-cn-anthropic", Label: "Token Plan - 中国 (Anthropic)", BaseURL: "https://token-plan-cn.xiaomimimo.com/anthropic", Description: "中国区订阅套餐 Anthropic 入口"},
 				{ID: "token-sgp-anthropic", Label: "Token Plan - 新加坡 (Anthropic)", BaseURL: "https://token-plan-sgp.xiaomimimo.com/anthropic", Description: "新加坡区订阅套餐 Anthropic 入口"},
 				{ID: "token-ams-anthropic", Label: "Token Plan - 欧洲 (Anthropic)", BaseURL: "https://token-plan-ams.xiaomimimo.com/anthropic", Description: "欧洲区订阅套餐 Anthropic 入口"},
-				{ID: "custom", Label: "自定义", Description: "手动填写 MiMo 兼容入口", Custom: true},
 			},
 			Targets: []ChannelTarget{
 				{Type: TargetMessages, Label: "Messages 原生透传", Description: "自动开启 reasoning passback 兼容", Recommended: true},
@@ -383,10 +382,6 @@ func FilterPlansForTarget(plans []ProviderPlan, target string) []ProviderPlan {
 	wantAnthropic := target == TargetMessages
 	var filtered []ProviderPlan
 	for _, plan := range plans {
-		if plan.Custom {
-			filtered = append(filtered, plan)
-			continue
-		}
 		isAnthropic := plan.Protocol() == "anthropic"
 		if wantAnthropic == isAnthropic {
 			filtered = append(filtered, plan)

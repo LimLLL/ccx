@@ -27,7 +27,6 @@ const providerIcons: Record<string, string> = {
 const selectedProvider = ref('')
 const selectedTarget = ref('')
 const selectedPlan = ref('')
-const customBaseUrl = ref('')
 const apiKey = ref('')
 const channelName = ref('')
 const localError = ref('')
@@ -60,18 +59,27 @@ watch(selectedProvider, (id) => {
   if (!preset) return
   selectedTarget.value = preset.defaultTarget
   selectedPlan.value = bestPlanForTarget(preset, preset.defaultTarget)
-  customBaseUrl.value = ''
   apiKey.value = ''
   channelName.value = `desktop-${preset.id}-${preset.defaultTarget}`
 })
 
-// target 变化时重新加载后端过滤后的 plans，并自动选中匹配的 plan
+// target 变化时重新加载后端过滤后的 plans，尽量保留已选 plan；
+// 若当前 plan 被协议过滤掉，尝试切换同区域的协议变体（如 token-cn ↔ token-cn-anthropic）
 watch(selectedTarget, async (target) => {
   if (!target) return
+  const prevPlan = selectedPlan.value
   await loadChannelPresets(target)
   const preset = currentPreset.value
   if (!preset) return
-  selectedPlan.value = bestPlanForTarget(preset, target)
+  if (preset.plans.some((p) => p.id === prevPlan)) {
+    selectedPlan.value = prevPlan
+  } else {
+    const counterpart = prevPlan.endsWith('-anthropic')
+      ? prevPlan.replace(/-anthropic$/, '')
+      : prevPlan + '-anthropic'
+    const match = preset.plans.find((p) => p.id === counterpart)
+    selectedPlan.value = match ? match.id : bestPlanForTarget(preset, target)
+  }
   channelName.value = `desktop-${preset.id}-${target}`
 })
 
@@ -100,8 +108,7 @@ const capabilityBadges = computed(() => {
 })
 
 const effectiveBaseUrl = computed(() => {
-  if (currentPlan.value?.custom) return customBaseUrl.value
-  return customBaseUrl.value || currentPlan.value?.baseUrl || currentAsset.value?.baseUrl || ''
+  return currentPlan.value?.baseUrl || currentAsset.value?.baseUrl || ''
 })
 
 const keyPlaceholder = computed(() => {
@@ -114,10 +121,6 @@ const submit = async () => {
   if (!preset) return
   if (!apiKey.value.trim() && !currentAsset.value?.apiKey) {
     localError.value = '请填写 API Key，或先在 Agent 配置中保存该 Provider 的 key。'
-    return
-  }
-  if (currentPlan.value?.custom && !customBaseUrl.value.trim()) {
-    localError.value = '自定义 token plan 需要填写 Base URL。'
     return
   }
   await createChannel({
@@ -225,7 +228,7 @@ const submit = async () => {
               class="w-full h-9 rounded-md border border-slate-800 bg-slate-950/70 px-3 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option v-for="target in targetOptions" :key="target.type" :value="target.type">
-                {{ target.label }}{{ target.recommended ? ' · 推荐' : '' }}
+                {{ target.label }}
               </option>
             </select>
             <p class="text-xs text-slate-500">
@@ -240,17 +243,12 @@ const submit = async () => {
               class="w-full h-9 rounded-md border border-slate-800 bg-slate-950/70 px-3 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option v-for="plan in currentPreset.plans" :key="plan.id" :value="plan.id">
-                {{ plan.label }}{{ plan.recommended ? ' · 推荐' : '' }}
+                {{ plan.label }}
               </option>
             </select>
             <p class="text-xs text-slate-500">{{ currentPlan?.description }}</p>
-            <p v-if="currentPlan?.baseUrl && !currentPlan?.custom" class="text-xs text-slate-400 font-mono">{{ currentPlan.baseUrl }}</p>
+            <p v-if="currentPlan?.baseUrl" class="text-xs text-slate-400 font-mono">{{ currentPlan.baseUrl }}</p>
           </div>
-        </div>
-
-        <div v-if="currentPlan?.custom" class="space-y-2">
-          <Label class="text-xs text-slate-400">自定义 Base URL</Label>
-          <Input v-model="customBaseUrl" type="url" placeholder="https://example.com/v1" />
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">

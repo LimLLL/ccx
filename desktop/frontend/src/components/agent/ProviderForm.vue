@@ -21,11 +21,10 @@ const emit = defineEmits<{
 }>()
 
 const mimoPlanOptions = [
-  { label: '按量计费（默认）', value: 'https://api.xiaomimimo.com/anthropic' },
+  { label: '按量', value: 'https://api.xiaomimimo.com/anthropic' },
   { label: '订阅套餐 - 中国', value: 'https://token-plan-cn.xiaomimimo.com/anthropic' },
   { label: '订阅套餐 - 新加坡', value: 'https://token-plan-sgp.xiaomimimo.com/anthropic' },
   { label: '订阅套餐 - 欧洲', value: 'https://token-plan-ams.xiaomimimo.com/anthropic' },
-  { label: '自定义', value: '' },
 ]
 
 const onProviderChange = (e: Event) => {
@@ -42,9 +41,7 @@ const onKeyChange = (value: string | number) => {
 const onMimoPlanChange = (e: Event) => {
   const planValue = (e.target as HTMLSelectElement).value
   emit('update:selectedMimoPlan', planValue)
-  if (planValue !== '') {
-    emit('update:mimoBaseUrl', planValue)
-  }
+  emit('update:mimoBaseUrl', planValue)
 }
 
 const keyPlaceholder = (provider: AgentProvider) => {
@@ -130,14 +127,5 @@ const keyPlaceholder = (provider: AgentProvider) => {
       />
     </div>
 
-    <div v-if="selectedProvider === 'mimo' && selectedMimoPlan === ''" class="space-y-1.5">
-      <Label class="text-xs text-muted-foreground">Base URL</Label>
-      <Input
-        type="url"
-        placeholder="https://api.xiaomimimo.com/anthropic"
-        :model-value="mimoBaseUrl"
-        @update:model-value="emit('update:mimoBaseUrl', String($event))"
-      />
-    </div>
   </div>
 </template>
