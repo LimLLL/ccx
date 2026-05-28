@@ -90,16 +90,20 @@ func injectRuntimeConfig(indexContent []byte, envCfg *config.EnvConfig) []byte {
 }
 
 // isAPIPath 检查路径是否为 API 端点
+// isAPIPath 检查路径是否为 API 端点
 func isAPIPath(path string) bool {
 	// API 路由前缀列表
 	apiPrefixes := []string{
-		"/v1/",    // Claude API 代理端点
-		"/api/",   // Web 管理界面 API
-		"/admin/", // 管理端点
+		"/v1",     // Claude / Chat / Responses / Models / Images
+		"/v1beta", // Gemini 原生格式
+		"/api",    // Web 管理界面 API
+		"/admin",  // 管理端点
 	}
 
 	for _, prefix := range apiPrefixes {
-		if strings.HasPrefix(path, prefix) {
+		// 同时匹配裸前缀（如 "/v1"）与子路径（如 "/v1/messages"），
+		// 避免 /v1、/api 这类访问被 SPA 兜底成 index.html。
+		if path == prefix || strings.HasPrefix(path, prefix+"/") {
 			return true
 		}
 	}
