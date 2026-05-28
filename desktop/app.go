@@ -616,19 +616,6 @@ func (s *DesktopService) SaveLanguagePreference(locale string) error {
 	})
 }
 
-func detectSystemLocale() string {
-	if v := os.Getenv("LC_ALL"); v != "" {
-		return v
-	}
-	if v := os.Getenv("LC_MESSAGES"); v != "" {
-		return v
-	}
-	if v := os.Getenv("LANG"); v != "" {
-		return v
-	}
-	return ""
-}
-
 func (s *DesktopService) Shutdown() {
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 	defer cancel()
