@@ -1,3 +1,29 @@
+## [v2.8.10] - 2026-05-28
+
+### 新增
+
+- **桌面端多语言切换** - 新增轻量 i18n 框架（zh-CN / en），默认英文并自动跟随系统语言，首次启动按系统语言选择、手动切换后持久化到 `ui-preferences.json`；DesktopService 暴露 `GetLanguagePreference` / `SaveLanguagePreference`；侧栏底部守护面板新增语言切换入口；Sidebar、Setup、Status（含 LogViewer、DiagnosticCard）、Agent（含 ProviderForm、ConfigDiffDialog）、Channel、Env、WebUI 等用户可见文案全部迁移到 `t()`，便于 Microsoft Store Windows 截图审核。
+- **桌面端 Agent 配置支持 OpenCode** - configservice 新增 `PlatformOpenCode` 平台、`OpenCodeProxyState`、JSONC provider 块解析与 `auth.json` 读写；默认 ccx provider 走 `http://127.0.0.1:<port>/v1`，可选直连 DeepSeek/MiMo/Compshare/Kimi/GLM/MiniMax/DashScope/OpenCode Zen/Go；写入 `~/.config/opencode/opencode.jsonc` 与 `~/.local/share/opencode/auth.json`；前端 AgentTab/AgentCard/ConfigDiffDialog 渲染 OpenCode 卡片；同步补充中英文 OpenCode 客户端 Desktop 自动配置文档。
+- **静默版本检查替代 wails updater 自动弹窗** - 关闭 wails updater 30 分钟自动 `CheckAndInstall`（无差别弹窗，失败场景尤为干扰）；新增 `desktopservice.CheckLatestRelease(force)` 直查 GitHub Releases，过滤 prerelease，服务端缓存 4 小时（错误 30 分钟）；侧栏版本号旁追加「新版 vX.X.X」胶囊，仅有更新时显示，点击打开 release 页（Store 分发不显示）；抽出 `useReleaseCheck` composable（启动 8s 首次检查、之后 4 小时一次）；托盘菜单「检查更新…」入口保留，主动点击仍走完整 wails updater 安装流程。
+- **OpenCode 直连仅保留官方原生支持的国产渠道** - OpenCode 卡片下拉移除 MiMo/Compshare/DashScope（OpenCode 官方未原生支持），保留 ccx + DeepSeek/Kimi/GLM/MiniMax + Zen/Go；`useAgentConfig` 同步补齐对应 baseURL 分支。
+- **渠道中心 preset 文案 i18n 化并区分 plan 渠道名** - 新增 `translateOrFallback` / `tf` helper，preset/plan/target 文案按 key 翻译、缺失 key 回退到 Go preset 原文；新增 `preset-messages.ts` 仅维护 EN，zh-CN 复用后端中文；channelName 默认值在选中非默认 plan 时追加 plan suffix，避免 MiMo/DashScope 多套餐同名覆盖。
+
+### 修复
+
+- **/v1 等裸 API 前缀不再被 SPA 兜底成 WebUI** - `isAPIPath` 仅匹配带尾部斜杠的前缀（"/v1/" 等），导致 `GET /v1`、`GET /api`、`GET /admin` 这类裸前缀落到 NoRoute 的 SPA 兜底分支返回 `index.html`；改为同时匹配 `path == prefix` 与 `prefix+"/"`，并补上之前漏掉的 `/v1beta`（Gemini 原生格式）；新增表驱动测试覆盖裸前缀、子路径以及 `/v1custom` / `/apifoo` 等非 API 路径。
+- **状态页 ServiceDetails 去除与 Sidebar 重叠的 PID/Health 信息** - 移除卡片内 PID 与健康状态行（Sidebar 已展示），同时去掉冗余小标题，避免与左侧栏视觉重叠。
+- **统一 Agent 卡片 Provider 下拉文案至 i18n** - Codex 卡片 ccx 选项原使用 `agent.localGateway`（"当前 CCX 网关"），与 Claude/OpenCode 卡片的 `agent.provider.localGateway`（"CCX 本地网关"）不一致；OpenCode 卡片其余选项及"访问官方控制台"按钮、API Key placeholder 也是硬编码中文；统一改用 `agent.provider.*` 与 `agent.openConsole` i18n key。
+- **注册 mdi-head-snowflake 图标** - AddChannelModal 的"回传 Thinking Blocks"开关使用 `mdi-head-snowflake`，但 `vuetify.ts` 未导入，运行时图标回退到占位文本；补 `@mdi/js` 导入与 `iconMap` 映射。
+
+### 优化
+
+- **收紧 ServiceDetails 卡片上下内边距** - 桌面端状态页 ServiceDetails 卡片上下内边距收紧，提升信息密度。
+- **语言切换合入侧栏底部守护面板** - 桌面端语言切换入口整合到侧栏底部守护面板，与现有偏好控件统一布局。
+
+### 文档
+
+- **新增桌面端教程截图** - 为桌面端使用指南补充压缩后的 CCX Desktop 截图，并将端口引用对齐到默认 3688。
+
 ## [v2.8.9] - 2026-05-27
 
 ### 修复
