@@ -254,6 +254,9 @@ export type MessageKey =
   | 'sidebar.updateAvailable'
   | 'sidebar.updateAvailableHint'
   | 'sidebar.theme'
+  | 'sidebar.themeAuto'
+  | 'sidebar.themeLight'
+  | 'sidebar.themeDark'
 
 export type Messages = Record<MessageKey, string>
 
@@ -505,6 +508,9 @@ export const messages: Record<SupportedLocale, Messages> = {
     'sidebar.updateAvailable': 'New {version}',
     'sidebar.updateAvailableHint': 'Click to view release notes',
     'sidebar.theme': 'Theme',
+    'sidebar.themeAuto': 'System',
+    'sidebar.themeLight': 'Light',
+    'sidebar.themeDark': 'Dark',
   },
   'zh-CN': {
     'common.gatewayLabel': 'CCX CORE',
@@ -753,5 +759,8 @@ export const messages: Record<SupportedLocale, Messages> = {
     'sidebar.updateAvailable': '新版 {version}',
     'sidebar.updateAvailableHint': '点击查看发布说明',
     'sidebar.theme': '主题',
+    'sidebar.themeAuto': '跟随系统',
+    'sidebar.themeLight': '亮色',
+    'sidebar.themeDark': '暗色',
   },
 }

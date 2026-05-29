@@ -13,6 +13,7 @@ import {
   Settings,
   Sliders,
   Globe,
+  Monitor,
   Play,
   Square,
   Power,
@@ -28,7 +29,13 @@ const modelValue = defineModel<TabValue>({ required: true })
 const { status, loading, autostartEnabled, startService, stopService, setAutostart } = useStatus()
 const { locale, languageOptions, setLanguage, t } = useLanguage()
 const { releaseInfo } = useReleaseCheck()
-const { theme, toggleTheme } = useTheme()
+const { theme, setTheme } = useTheme()
+
+const themeOptions = computed(() => [
+  { value: 'auto' as const, icon: Monitor, label: t('sidebar.themeAuto') },
+  { value: 'light' as const, icon: Sun, label: t('sidebar.themeLight') },
+  { value: 'dark' as const, icon: Moon, label: t('sidebar.themeDark') },
+])
 
 const versionInfo = ref<VersionInfo | null>(null)
 const isStoreDistribution = computed(() => versionInfo.value?.distribution === 'store')
@@ -204,14 +211,22 @@ const handleDaemonAction = async () => {
           </div>
           <div class="flex justify-between items-center">
             <span>{{ t('sidebar.theme') }}</span>
-            <button
-              @click="toggleTheme"
-              class="flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all duration-200 cursor-pointer bg-secondary text-muted-foreground border-border hover:text-foreground"
-              :title="theme === 'dark' ? t('sidebar.theme') : t('sidebar.theme')"
-            >
-              <Sun v-if="theme === 'dark'" class="w-2.5 h-2.5" />
-              <Moon v-else class="w-2.5 h-2.5" />
-            </button>
+            <div class="flex items-center gap-0.5 bg-secondary rounded border border-border p-0.5">
+              <button
+                v-for="opt in themeOptions"
+                :key="opt.value"
+                @click="setTheme(opt.value)"
+                :title="opt.label"
+                :class="[
+                  'px-1.5 py-0.5 rounded transition-all duration-200 cursor-pointer',
+                  theme === opt.value
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                ]"
+              >
+                <component :is="opt.icon" class="w-2.5 h-2.5" />
+              </button>
+            </div>
           </div>
           <div class="flex justify-between items-center">
             <span>{{ t('common.version') }}</span>
