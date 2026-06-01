@@ -1798,6 +1798,19 @@ const isAuthenticated = computed(() => authStore.isAuthenticated)
 // 认证尝试限制
 const MAX_AUTH_ATTEMPTS = 5
 
+const getAuthLockoutRemainingSeconds = () => {
+  const lockoutTime = authStore.authLockoutTime
+  if (!lockoutTime) return 0
+
+  const remainingSeconds = Math.ceil((lockoutTime - Date.now()) / 1000)
+  if (remainingSeconds <= 0) {
+    authStore.setAuthLockout(null)
+    authStore.resetAuthAttempts()
+    return 0
+  }
+  return remainingSeconds
+}
+
 // 控制认证对话框显示
 const showAuthDialog = computed({
   get: () => {
@@ -1852,15 +1865,19 @@ const setAuthKey = (key: string) => {
 }
 
 // 处理认证提交
-const handleAuthSubmit = async () => {
+const submitAuth = async (options: { countFailures?: boolean; ignoreLockout?: boolean } = {}) => {
+  const countFailures = options.countFailures ?? true
+  const ignoreLockout = options.ignoreLockout ?? false
+
   if (!authStore.authKeyInput.trim()) {
     authStore.setAuthError(t('toast.enterAccessKey'))
     return
   }
 
-  // 检查是否被锁定
-  if (authStore.isAuthLocked) {
-    const remainingSeconds = Math.ceil((authStore.authLockoutTime! - Date.now()) / 1000)
+  // 检查是否被锁定；过期锁定会自动清理，避免显示负数倒计时
+  // 桌面端 iframe 自动注入密钥时忽略前端本地 lockout，但仍会验证 key 是否有效
+  const remainingSeconds = ignoreLockout ? 0 : getAuthLockoutRemainingSeconds()
+  if (remainingSeconds > 0) {
     authStore.setAuthError(t('toast.tooManyAttemptsSeconds', { seconds: remainingSeconds }))
     return
   }
@@ -1893,17 +1910,22 @@ const handleAuthSubmit = async () => {
   } catch (error) {
     // 仅在明确 401 时计入认证失败；网络/5xx 不计入失败次数，也不清除已保存密钥
     if (error instanceof ApiError && error.status === 401) {
-      authStore.incrementAuthAttempts()
+      if (countFailures) {
+        authStore.incrementAuthAttempts()
 
-      // 记录认证失败(前端日志)
-      console.warn('🔒 认证失败 - 尝试次数:', authStore.authAttempts, '时间:', new Date().toISOString())
+        // 记录认证失败(前端日志)
+        console.warn('🔒 认证失败 - 尝试次数:', authStore.authAttempts, '时间:', new Date().toISOString())
 
-      // 如果尝试次数过多，锁定5分钟
-      if (authStore.authAttempts >= MAX_AUTH_ATTEMPTS) {
-        authStore.setAuthLockout(new Date(Date.now() + 5 * 60 * 1000))
-        authStore.setAuthError(t('toast.tooManyAttempts'))
+        // 如果尝试次数过多，锁定5分钟
+        if (authStore.authAttempts >= MAX_AUTH_ATTEMPTS) {
+          authStore.setAuthLockout(new Date(Date.now() + 5 * 60 * 1000))
+          authStore.setAuthError(t('toast.tooManyAttempts'))
+        } else {
+          authStore.setAuthError(t('toast.accessKeyInvalidRemaining', { remaining: MAX_AUTH_ATTEMPTS - authStore.authAttempts }))
+        }
       } else {
-        authStore.setAuthError(t('toast.accessKeyInvalidRemaining', { remaining: MAX_AUTH_ATTEMPTS - authStore.authAttempts }))
+        // 桌面端 iframe 自动注入密钥时不消耗手动登录尝试次数，避免重复 postMessage 触发本地锁定
+        authStore.setAuthError(t('toast.authInvalid'))
       }
 
       authStore.clearAuth()
@@ -1914,6 +1936,10 @@ const handleAuthSubmit = async () => {
   } finally {
     authStore.setAuthLoading(false)
   }
+}
+
+const handleAuthSubmit = async () => {
+  await submitAuth()
 }
 
 // 处理注销
@@ -2022,7 +2048,7 @@ onMounted(async () => {
       if (data?.type !== 'ccx-desktop-auth' || !data.accessKey) return
 
       authStore.setAuthKeyInput(data.accessKey)
-      await handleAuthSubmit()
+      await submitAuth({ countFailures: false, ignoreLockout: true })
       // 认证成功后移除监听器；失败时保留以便桌面端重试
       if (authStore.apiKey) {
         window.removeEventListener('message', handleDesktopAuth)
@@ -2041,7 +2067,7 @@ onMounted(async () => {
 
       window.removeEventListener('message', handleDesktopAuthFallback)
       authStore.setAuthKeyInput(data.accessKey)
-      await handleAuthSubmit()
+      await submitAuth({ countFailures: false, ignoreLockout: true })
     }
     window.addEventListener('message', handleDesktopAuthFallback)
   }
