@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/BenedictKing/ccx/desktop/internal/appdirs"
 	"github.com/BenedictKing/ccx/desktop/internal/backend"
 	"github.com/BenedictKing/ccx/desktop/internal/singleinstance"
 	"github.com/BenedictKing/ccx/desktop/internal/windowstate"
@@ -516,14 +517,7 @@ func setupFileLog(dataDir string) func() {
 
 // setupBootstrapLog 在 backend manager 初始化前写入固定位置日志，覆盖 dataDir 计算阶段的启动问题。
 func setupBootstrapLog() func() {
-	base, err := os.UserConfigDir()
-	if err != nil || base == "" {
-		base, _ = os.UserHomeDir()
-	}
-	if base == "" {
-		base = "."
-	}
-	logDir := filepath.Join(base, "ccx-desktop")
+	logDir := defaultBootstrapLogDir()
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return func() {}
 	}
@@ -535,6 +529,10 @@ func setupBootstrapLog() func() {
 	log.SetOutput(io.MultiWriter(f, os.Stderr))
 	log.Printf("[Desktop-Log] 启动日志文件: %s", logPath)
 	return func() { f.Close() }
+}
+
+func defaultBootstrapLogDir() string {
+	return appdirs.DataDir()
 }
 
 func mustGetwd() string {

@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/BenedictKing/ccx/desktop/internal/appdirs"
 )
 
 const (
@@ -138,7 +140,7 @@ func New(dataDir string) (*Service, error) {
 		return nil, fmt.Errorf("无法定位用户主目录")
 	}
 	if dataDir == "" {
-		dataDir = filepath.Join(homeDir, ".config", "ccx-desktop")
+		dataDir = appdirs.DataDirForHome(homeDir)
 	}
 	stateDir := filepath.Join(dataDir, "agent-config-state")
 	if err := os.MkdirAll(stateDir, 0o755); err != nil {
@@ -406,7 +408,6 @@ func (s *Service) getCodexStatus(port int) (AgentConfigStatus, error) {
 	return status, nil
 }
 
-
 func (s *Service) applyClaude(req ApplyAgentConfigRequest, port int, accessKey string) error {
 	provider := normalizeClaudeProvider(req.Provider)
 	baseURL, authToken, apiKey, err := resolveClaudeProvider(req, port, accessKey)
@@ -624,7 +625,6 @@ experimental_bearer_token = %q
 	authData["auth_mode"] = "chatgpt"
 	return writeJSONAtomic(authPath, authData)
 }
-
 
 func (s *Service) applyCodexOpenAI(apiKey string) error {
 	configPath := s.codexConfigPath()
@@ -1640,7 +1640,6 @@ experimental_bearer_token = %q
 		computeJSONDiff(authPath, authData, newAuthData),
 	}}, nil
 }
-
 
 func (s *Service) previewApplyCodexOpenAI(apiKey string) (ConfigDiffResult, error) {
 	configPath := s.codexConfigPath()

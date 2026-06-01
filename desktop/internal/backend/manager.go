@@ -19,6 +19,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/BenedictKing/ccx/desktop/internal/appdirs"
 )
 
 const (
@@ -748,17 +750,11 @@ func detectRootDir() string {
 // defaultDataDir 返回与 cwd / 安装路径解耦的稳定数据目录。
 // 早期版本使用 sha1(rootDir)[:10] 作为子目录，会因启动方式（Dock/Spotlight/终端 dev）
 // 不同导致 cwd 变化，从而生成多个互不相通的 hash 目录，造成数据丢失。
-// 现在直接落到顶层 ccx-desktop/，dev 与 prod 共用同一目录，符合 macOS / Linux / Windows
-// 标准应用数据目录约定。已存在的 hash 子目录不做迁移，由用户自行处理。
+// 现在直接落到稳定的应用数据目录，dev 与 prod 共用同一目录；Linux 存放 .env
+// 与本地状态/密钥，按 XDG state 约定使用 ~/.local/state/ccx。已存在的 hash 子目录
+// 不做迁移，由用户自行处理。
 func defaultDataDir() string {
-	base, err := os.UserConfigDir()
-	if err != nil || base == "" {
-		base, _ = os.UserHomeDir()
-	}
-	if base == "" {
-		base = "."
-	}
-	return filepath.Join(base, "ccx-desktop")
+	return appdirs.DataDir()
 }
 
 func setEnv(env []string, key, value string) []string {

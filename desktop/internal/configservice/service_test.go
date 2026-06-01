@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -382,11 +383,17 @@ func TestNew(t *testing.T) {
 func TestNewWithDefaultDataDir(t *testing.T) {
 	tmpHome := t.TempDir()
 	t.Setenv("HOME", tmpHome)
+	if runtime.GOOS == "linux" {
+		t.Setenv("XDG_STATE_HOME", "")
+	}
 	svc, err := New("")
 	if err != nil {
 		t.Fatalf("New('') failed: %v", err)
 	}
 	expected := filepath.Join(tmpHome, ".config", "ccx-desktop", "agent-config-state")
+	if runtime.GOOS == "linux" {
+		expected = filepath.Join(tmpHome, ".local", "state", "ccx", "agent-config-state")
+	}
 	if svc.stateDir != expected {
 		t.Errorf("stateDir = %q, want %q", svc.stateDir, expected)
 	}
@@ -970,7 +977,6 @@ wire_api = "responses"
 		t.Error("config.toml should NOT contain legacy [model_providers.ccx] block after migration")
 	}
 }
-
 
 // ── Codex 模式切换测试 ──
 
