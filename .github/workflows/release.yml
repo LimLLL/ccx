@@ -69,7 +69,7 @@ jobs:
           shasum -a 256 ccx-darwin-amd64 | awk '{print $1}' > ccx-darwin-amd64.sha256
 
       - name: Install Wails3 CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.95
+        run: bash ./scripts/install-wails3.sh
 
       - name: Install create-dmg
         run: brew install create-dmg
@@ -196,7 +196,7 @@ jobs:
           sha256sum ccx-windows-arm64.exe | awk '{print $1}' > ccx-windows-arm64.exe.sha256
 
       - name: Install Wails3 CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.95
+        run: bash ./scripts/install-wails3.sh
 
       - name: Install Desktop Frontend Deps
         run: bun install --frozen-lockfile
@@ -419,7 +419,7 @@ jobs:
           sudo apt-get install -y libgtk-4-dev webkitgtk-6.0 libfuse2 pkg-config build-essential
 
       - name: Install Wails3 CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.95
+        run: bash ./scripts/install-wails3.sh
 
       - name: Install Desktop Frontend Deps
         run: bun install --frozen-lockfile
@@ -519,7 +519,7 @@ jobs:
           sudo apt-get install -y libgtk-4-dev webkitgtk-6.0 libfuse2 pkg-config build-essential
 
       - name: Install Wails3 CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.95
+        run: bash ./scripts/install-wails3.sh
 
       - name: Install Desktop Frontend Deps
         run: bun install --frozen-lockfile

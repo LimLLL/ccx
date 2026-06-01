@@ -6,6 +6,9 @@ on:
       - 'desktop/**/*.go'
       - 'desktop/go.mod'
       - 'desktop/go.sum'
+      - 'scripts/install-wails3.sh'
+      - '.github/workflows/check-bindings.yml'
+      - '.github/workflows/release.yml'
 
 jobs:
   check-bindings:
@@ -21,7 +24,7 @@ jobs:
           cache-dependency-path: desktop/go.sum
 
       - name: Install Wails3 CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.92
+        run: bash ./scripts/install-wails3.sh
 
       - name: Generate bindings
         working-directory: ./desktop

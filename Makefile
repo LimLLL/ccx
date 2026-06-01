@@ -33,12 +33,8 @@ install:
 	@cd backend-go && go mod download
 	@echo "$(GREEN)📦 下载桌面端 Go 依赖...$(NC)"
 	@cd desktop && go mod download
-	@if ! command -v wails3 &> /dev/null; then \
-		echo "$(GREEN)📦 安装 Wails 3 CLI...$(NC)"; \
-		go install github.com/wailsapp/wails/v3/cmd/wails3@latest; \
-	else \
-		echo "$(GREEN)✅ Wails 3 已安装，跳过$(NC)"; \
-	fi
+	@echo "$(GREEN)📦 安装 Wails 3 CLI...$(NC)"
+	@bash ./scripts/install-wails3.sh
 	@if ! command -v air &> /dev/null; then \
 		echo "$(GREEN)📦 安装 Air 热重载工具...$(NC)"; \
 		go install github.com/air-verse/air@latest; \
