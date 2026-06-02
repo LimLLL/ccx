@@ -20,9 +20,20 @@ const envPath = ref('')
 const pendingTab = ref<TabValue | null>(null)
 let checkPromise: Promise<void> | null = null
 
+const SKIP_SETUP_PARAM = 'skip_setup'
+
 const checkSetup = async () => {
   if (checkPromise) return checkPromise
   checkPromise = (async () => {
+    // 开发调试：URL 带 ?skip_setup 参数时跳过 Setup 引导，直接进入主界面
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.has(SKIP_SETUP_PARAM)) {
+        setupComplete.value = true
+        setupChecked.value = true
+        return
+      }
+    }
     setupError.value = ''
     try {
       const [done, env] = await Promise.all([IsSetupComplete(), GetEnvFile()])

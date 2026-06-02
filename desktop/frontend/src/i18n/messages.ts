@@ -383,6 +383,129 @@ export type MessageKey =
   | 'sidebar.themeAuto'
   | 'sidebar.themeLight'
   | 'sidebar.themeDark'
+  | 'console.channelsTab'
+  | 'console.conversationsTab'
+  | 'console.nativeChannelsEyebrow'
+  | 'console.nativeChannelsTitle'
+  | 'console.quickAdd'
+  | 'console.quickAddEyebrow'
+  | 'console.quickAddTitle'
+  | 'console.searchChannels'
+  | 'console.actions.refresh'
+  | 'console.pingAll'
+  | 'console.addChannel'
+  | 'console.noChannels'
+  | 'console.noSearchResults'
+  | 'console.mode.multi'
+  | 'console.mode.single'
+  | 'console.pool.active'
+  | 'console.pool.inactive'
+  | 'console.channelStatus.active'
+  | 'console.channelStatus.suspended'
+  | 'console.channelStatus.disabled'
+  | 'console.circuit.open'
+  | 'console.circuit.halfOpen'
+  | 'console.keys.active'
+  | 'console.actions.label'
+  | 'console.actions.edit'
+  | 'console.actions.capability'
+  | 'console.actions.logs'
+  | 'console.actions.copy'
+  | 'console.actions.website'
+  | 'console.actions.ping'
+  | 'console.actions.enable'
+  | 'console.actions.suspend'
+  | 'console.actions.resume'
+  | 'console.actions.promote'
+  | 'console.actions.disable'
+  | 'console.actions.delete'
+  | 'console.actions.resetCircuit'
+  | 'console.form.addChannel'
+  | 'console.form.editChannel'
+  | 'console.form.basicInfo'
+  | 'console.form.name'
+  | 'console.form.nameRequired'
+  | 'console.form.serviceType'
+  | 'console.form.selectServiceType'
+  | 'console.form.serviceTypeRequired'
+  | 'console.form.description'
+  | 'console.form.connection'
+  | 'console.form.baseUrl'
+  | 'console.form.baseUrlRequired'
+  | 'console.form.additionalUrls'
+  | 'console.form.proxyUrl'
+  | 'console.form.routePrefix'
+  | 'console.form.insecureSkipVerify'
+  | 'console.form.authentication'
+  | 'console.form.apiKeys'
+  | 'console.form.disabledKeys'
+  | 'console.form.restoreKey'
+  | 'console.form.historicalKeys'
+  | 'console.form.models'
+  | 'console.form.modelMapping'
+  | 'console.form.supportedModels'
+  | 'console.form.protocolOptions'
+  | 'console.form.reasoningParamStyle'
+  | 'console.form.textVerbosity'
+  | 'console.form.advancedFlags'
+  | 'console.form.noVision'
+  | 'console.form.passbackReasoning'
+  | 'console.form.passbackThinking'
+  | 'console.form.fastMode'
+  | 'console.form.lowQuality'
+  | 'console.form.injectDummySignature'
+  | 'console.form.stripThoughtSignature'
+  | 'console.form.stripEmptyBlocks'
+  | 'console.form.normalizeSystem'
+  | 'console.form.normalizeUserId'
+  | 'console.form.normalizeChatRoles'
+  | 'console.form.autoBlacklist'
+  | 'console.form.codexNativeTools'
+  | 'console.form.codexCompat'
+  | 'console.form.stripCodexTools'
+  | 'console.form.customHeaders'
+  | 'console.form.requestTimeoutMs'
+  | 'console.form.requestTimeoutInvalid'
+  | 'console.form.create'
+  | 'console.form.save'
+  | 'addChannel.quickMode'
+  | 'addChannel.quickHint'
+  | 'addChannel.applyDetected'
+  | 'addChannel.noneDetected'
+  | 'addChannel.fullSubtitle'
+  | 'addChannel.editSubtitle'
+  | 'console.conversations.search'
+  | 'console.conversations.allKinds'
+  | 'console.conversations.refresh'
+  | 'console.conversations.total'
+  | 'console.conversations.empty'
+  | 'console.conversations.noSearchResults'
+  | 'console.conversations.overrideTitle'
+  | 'console.conversations.overrideHint'
+  | 'console.conversations.overrideSequence'
+  | 'console.conversations.overrideRequired'
+  | 'console.conversations.saveOverride'
+  | 'console.conversations.noChannelsForKind'
+  | 'console.capability.title'
+  | 'console.capability.start'
+  | 'console.capability.cancel'
+  | 'console.capability.running'
+  | 'console.capability.noResults'
+  | 'console.capability.lastResults'
+  | 'console.capability.models'
+  | 'console.capability.duration'
+  | 'console.capability.protocolResults'
+  | 'console.capability.compatible'
+  | 'console.logs.title'
+  | 'console.logs.time'
+  | 'console.logs.model'
+  | 'console.logs.baseUrl'
+  | 'console.logs.key'
+  | 'console.logs.statusCode'
+  | 'console.logs.duration'
+  | 'console.logs.error'
+  | 'console.logs.entries'
+  | 'console.logs.empty'
 
 export type Messages = Record<MessageKey, string>
 
@@ -763,6 +886,129 @@ export const messages: Record<SupportedLocale, Messages> = {
     'sidebar.themeAuto': 'System',
     'sidebar.themeLight': 'Light',
     'sidebar.themeDark': 'Dark',
+    'console.channelsTab': 'Channels',
+    'console.conversationsTab': 'Conversations',
+    'console.nativeChannelsEyebrow': 'Native channel orchestration',
+    'console.nativeChannelsTitle': 'WebUI-aligned protocol workspace',
+    'console.quickAdd': 'Quick Add',
+    'console.quickAddEyebrow': 'Provider Presets',
+    'console.quickAddTitle': 'Quick Add Channel',
+    'console.searchChannels': 'Search channels...',
+    'console.actions.refresh': 'Refresh',
+    'console.pingAll': 'Ping all',
+    'console.addChannel': 'Add channel',
+    'console.noChannels': 'No channels yet. Click the button above to add one.',
+    'console.noSearchResults': 'No matching channels',
+    'console.mode.multi': 'Multi-channel',
+    'console.mode.single': 'Single-channel',
+    'console.pool.active': 'Failover Sequence',
+    'console.pool.inactive': 'Inactive Pool',
+    'console.channelStatus.active': 'Active',
+    'console.channelStatus.suspended': 'Suspended',
+    'console.channelStatus.disabled': 'Disabled',
+    'console.circuit.open': 'Circuit Open',
+    'console.circuit.halfOpen': 'Half-Open',
+    'console.keys.active': 'active keys',
+    'console.actions.label': 'Actions',
+    'console.actions.edit': 'Edit Channel',
+    'console.actions.capability': 'Capability Test',
+    'console.actions.logs': 'View Logs',
+    'console.actions.copy': 'Copy Config',
+    'console.actions.website': 'Visit Website',
+    'console.actions.ping': 'Ping',
+    'console.actions.enable': 'Enable',
+    'console.actions.suspend': 'Suspend',
+    'console.actions.resume': 'Resume',
+    'console.actions.promote': 'Promote',
+    'console.actions.disable': 'Disable',
+    'console.actions.delete': 'Delete Channel',
+    'console.actions.resetCircuit': 'Reset Circuit Breaker',
+    'console.form.addChannel': 'Add channel',
+    'console.form.editChannel': 'Edit channel',
+    'console.form.basicInfo': 'Basic info',
+    'console.form.name': 'Name',
+    'console.form.nameRequired': 'Channel name is required',
+    'console.form.serviceType': 'Service type',
+    'console.form.selectServiceType': 'Select service type',
+    'console.form.serviceTypeRequired': 'Please select a service type',
+    'console.form.description': 'Description',
+    'console.form.connection': 'Connection',
+    'console.form.baseUrl': 'Base URL',
+    'console.form.baseUrlRequired': 'At least one Base URL is required',
+    'console.form.additionalUrls': 'Additional URLs (one per line)',
+    'console.form.proxyUrl': 'Proxy URL',
+    'console.form.routePrefix': 'Route prefix',
+    'console.form.insecureSkipVerify': 'Skip TLS verify',
+    'console.form.authentication': 'Authentication',
+    'console.form.apiKeys': 'API Keys (one per line)',
+    'console.form.disabledKeys': 'Disabled keys',
+    'console.form.restoreKey': 'Restore',
+    'console.form.historicalKeys': 'historical keys recorded',
+    'console.form.models': 'Models',
+    'console.form.modelMapping': 'Model mapping (JSON)',
+    'console.form.supportedModels': 'Supported models (one per line, empty=all)',
+    'console.form.protocolOptions': 'Protocol & model advanced options',
+    'console.form.reasoningParamStyle': 'Reasoning param style',
+    'console.form.textVerbosity': 'Text verbosity',
+    'console.form.advancedFlags': 'Advanced flags',
+    'console.form.noVision': 'No vision',
+    'console.form.passbackReasoning': 'Passback reasoning content',
+    'console.form.passbackThinking': 'Passback thinking blocks',
+    'console.form.fastMode': 'Fast mode',
+    'console.form.lowQuality': 'Low quality',
+    'console.form.injectDummySignature': 'Inject dummy thought signature',
+    'console.form.stripThoughtSignature': 'Strip thought signature',
+    'console.form.stripEmptyBlocks': 'Strip empty text blocks',
+    'console.form.normalizeSystem': 'Normalize system role',
+    'console.form.normalizeUserId': 'Normalize user ID',
+    'console.form.normalizeChatRoles': 'Normalize chat roles',
+    'console.form.autoBlacklist': 'Auto-blacklist balance-anomaly keys',
+    'console.form.codexNativeTools': 'Codex native tool passthrough',
+    'console.form.codexCompat': 'Codex tool compat',
+    'console.form.stripCodexTools': 'Strip Codex client tools',
+    'console.form.customHeaders': 'Custom headers (JSON)',
+    'console.form.requestTimeoutMs': 'Request timeout (ms)',
+    'console.form.requestTimeoutInvalid': 'Timeout must be a positive integer in ms',
+    'console.form.create': 'Create',
+    'console.form.save': 'Save',
+    'addChannel.quickMode': 'Quick Paste',
+    'addChannel.quickHint': 'Paste Base URL, API Key, or full config snippet to auto-detect and fill the form.',
+    'addChannel.applyDetected': 'Apply detected',
+    'addChannel.noneDetected': 'None detected',
+    'addChannel.fullSubtitle': 'Configure channel, keys, models and advanced protocol options',
+    'addChannel.editSubtitle': 'Modify channel configuration',
+    'console.conversations.search': 'Search conversations...',
+    'console.conversations.allKinds': 'All kinds',
+    'console.conversations.refresh': 'Refresh',
+    'console.conversations.total': '{count} conversations',
+    'console.conversations.empty': 'No active conversations',
+    'console.conversations.noSearchResults': 'No matching conversations',
+    'console.conversations.overrideTitle': 'Channel override',
+    'console.conversations.overrideHint': 'Select the channel sequence for this conversation (by priority):',
+    'console.conversations.overrideSequence': 'Override sequence',
+    'console.conversations.overrideRequired': 'Please select at least one channel',
+    'console.conversations.saveOverride': 'Save override',
+    'console.conversations.noChannelsForKind': 'No channels available for this type',
+    'console.capability.title': 'Capability test',
+    'console.capability.start': 'Start test',
+    'console.capability.cancel': 'Cancel',
+    'console.capability.running': 'Test in progress...',
+    'console.capability.noResults': 'No capability test results yet',
+    'console.capability.lastResults': 'Last test results',
+    'console.capability.models': 'Models',
+    'console.capability.duration': 'Duration',
+    'console.capability.protocolResults': 'Protocol results',
+    'console.capability.compatible': 'Compatible protocols',
+    'console.logs.title': 'Channel logs',
+    'console.logs.time': 'Time',
+    'console.logs.model': 'Model',
+    'console.logs.baseUrl': 'URL',
+    'console.logs.key': 'Key',
+    'console.logs.statusCode': 'Status',
+    'console.logs.duration': 'Duration',
+    'console.logs.error': 'Error',
+    'console.logs.entries': 'entries',
+    'console.logs.empty': 'No logs yet',
   },
   'zh-CN': {
     'common.gatewayLabel': 'CCX CORE',
@@ -1140,5 +1386,128 @@ export const messages: Record<SupportedLocale, Messages> = {
     'sidebar.themeAuto': '跟随系统',
     'sidebar.themeLight': '亮色',
     'sidebar.themeDark': '暗色',
+    'console.channelsTab': '渠道管理',
+    'console.conversationsTab': '会话管理',
+    'console.nativeChannelsEyebrow': '原生渠道编排',
+    'console.nativeChannelsTitle': 'WebUI 对齐协议工作区',
+    'console.quickAdd': '快速添加',
+    'console.quickAddEyebrow': '渠道预设',
+    'console.quickAddTitle': '快速添加渠道',
+    'console.searchChannels': '搜索渠道...',
+    'console.actions.refresh': '刷新',
+    'console.pingAll': '批量测速',
+    'console.addChannel': '添加渠道',
+    'console.noChannels': '暂无渠道，点击上方按钮添加',
+    'console.noSearchResults': '没有匹配的渠道',
+    'console.mode.multi': '多渠道',
+    'console.mode.single': '单渠道',
+    'console.pool.active': '故障转移序列',
+    'console.pool.inactive': '停用池',
+    'console.channelStatus.active': '活跃',
+    'console.channelStatus.suspended': '暂停',
+    'console.channelStatus.disabled': '停用',
+    'console.circuit.open': '熔断开启',
+    'console.circuit.halfOpen': '半开',
+    'console.keys.active': '活跃密钥',
+    'console.actions.label': '操作',
+    'console.actions.edit': '编辑渠道',
+    'console.actions.capability': '能力测试',
+    'console.actions.logs': '查看日志',
+    'console.actions.copy': '复制配置',
+    'console.actions.website': '访问网站',
+    'console.actions.ping': '测速',
+    'console.actions.enable': '启用',
+    'console.actions.suspend': '暂停',
+    'console.actions.resume': '恢复',
+    'console.actions.promote': '提升优先级',
+    'console.actions.disable': '停用',
+    'console.actions.delete': '删除渠道',
+    'console.actions.resetCircuit': '重置熔断器',
+    'console.form.addChannel': '添加渠道',
+    'console.form.editChannel': '编辑渠道',
+    'console.form.basicInfo': '基础信息',
+    'console.form.name': '名称',
+    'console.form.nameRequired': '渠道名称必填',
+    'console.form.serviceType': '服务类型',
+    'console.form.selectServiceType': '选择服务类型',
+    'console.form.serviceTypeRequired': '请选择服务类型',
+    'console.form.description': '描述',
+    'console.form.connection': '连接',
+    'console.form.baseUrl': 'Base URL',
+    'console.form.baseUrlRequired': '至少需要一个 Base URL',
+    'console.form.additionalUrls': '额外 URL（每行一个）',
+    'console.form.proxyUrl': '代理 URL',
+    'console.form.routePrefix': '路由前缀',
+    'console.form.insecureSkipVerify': '跳过 TLS 验证',
+    'console.form.authentication': '认证',
+    'console.form.apiKeys': 'API Keys（每行一个）',
+    'console.form.disabledKeys': '已禁用密钥',
+    'console.form.restoreKey': '恢复',
+    'console.form.historicalKeys': '历史密钥记录',
+    'console.form.models': '模型',
+    'console.form.modelMapping': '模型映射（JSON）',
+    'console.form.supportedModels': '支持的模型（每行一个，留空=全部）',
+    'console.form.protocolOptions': '协议与模型高级选项',
+    'console.form.reasoningParamStyle': 'Reasoning 参数风格',
+    'console.form.textVerbosity': 'Text verbosity',
+    'console.form.advancedFlags': '高级选项',
+    'console.form.noVision': '禁用视觉',
+    'console.form.passbackReasoning': '回传推理内容',
+    'console.form.passbackThinking': '回传思考块',
+    'console.form.fastMode': '快速模式',
+    'console.form.lowQuality': '低质量标记',
+    'console.form.injectDummySignature': '注入假思考签名',
+    'console.form.stripThoughtSignature': '移除思考签名',
+    'console.form.stripEmptyBlocks': '移除空文本块',
+    'console.form.normalizeSystem': '规范化系统角色',
+    'console.form.normalizeUserId': '规范化用户 ID',
+    'console.form.normalizeChatRoles': '规范化 Chat 角色',
+    'console.form.autoBlacklist': '自动黑名单余额异常 Key',
+    'console.form.codexNativeTools': 'Codex 原生工具透传',
+    'console.form.codexCompat': 'Codex 工具兼容',
+    'console.form.stripCodexTools': '移除 Codex 客户端工具',
+    'console.form.customHeaders': '自定义 Headers（JSON）',
+    'console.form.requestTimeoutMs': '请求超时（ms）',
+    'console.form.requestTimeoutInvalid': '请求超时必须是正整数毫秒',
+    'console.form.create': '创建',
+    'console.form.save': '保存',
+    'addChannel.quickMode': '快速粘贴',
+    'addChannel.quickHint': '粘贴 Base URL、API Key 或完整配置片段，自动识别并填入表单。',
+    'addChannel.applyDetected': '应用识别结果',
+    'addChannel.noneDetected': '未识别',
+    'addChannel.fullSubtitle': '配置渠道、密钥、模型与高级协议选项',
+    'addChannel.editSubtitle': '修改渠道配置信息',
+    'console.conversations.search': '搜索会话...',
+    'console.conversations.allKinds': '所有类型',
+    'console.conversations.refresh': '刷新',
+    'console.conversations.total': '共 {count} 个会话',
+    'console.conversations.empty': '暂无活跃会话',
+    'console.conversations.noSearchResults': '没有匹配的会话',
+    'console.conversations.overrideTitle': '会话渠道覆盖',
+    'console.conversations.overrideHint': '选择该会话使用的渠道序列（按优先级排列）：',
+    'console.conversations.overrideSequence': '覆盖序列',
+    'console.conversations.overrideRequired': '请至少选择一个渠道',
+    'console.conversations.saveOverride': '保存覆盖',
+    'console.conversations.noChannelsForKind': '该类型暂无可用渠道',
+    'console.capability.title': '能力测试',
+    'console.capability.start': '开始测试',
+    'console.capability.cancel': '取消',
+    'console.capability.running': '测试进行中...',
+    'console.capability.noResults': '尚未进行能力测试',
+    'console.capability.lastResults': '上次测试结果',
+    'console.capability.models': '模型',
+    'console.capability.duration': '总耗时',
+    'console.capability.protocolResults': '协议结果',
+    'console.capability.compatible': '兼容协议',
+    'console.logs.title': '频道日志',
+    'console.logs.time': '时间',
+    'console.logs.model': '模型',
+    'console.logs.baseUrl': 'URL',
+    'console.logs.key': 'Key',
+    'console.logs.statusCode': '状态码',
+    'console.logs.duration': '耗时',
+    'console.logs.error': '错误',
+    'console.logs.entries': '条',
+    'console.logs.empty': '暂无日志',
   },
 }
