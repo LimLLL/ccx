@@ -85,7 +85,7 @@ func TestAddAPIKeyRemovesDisabledEntryAndRestoreAvoidsDuplicate(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("NewConfigManager() error = %v", err)
 	}
@@ -192,7 +192,7 @@ func TestBlacklistAndRestoreLogsIncludeTransitionFields(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("NewConfigManager() error = %v", err)
 	}
@@ -235,7 +235,7 @@ func TestValidateChannelKeysSuspendsChatChannelWithoutKeys(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("NewConfigManager() error = %v", err)
 	}
@@ -265,7 +265,7 @@ func TestUpdateUpstreamCanSetAutoBlacklistBalance(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("NewConfigManager() error = %v", err)
 	}
@@ -297,7 +297,7 @@ func TestNormalizeMetadataUserIDDefaultsAndUpdate(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("NewConfigManager() error = %v", err)
 	}
@@ -345,7 +345,7 @@ func TestCodexToolCompatDefaultsAndUpdate(t *testing.T) {
 		t.Fatalf("write config: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("NewConfigManager() error = %v", err)
 	}

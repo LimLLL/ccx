@@ -293,7 +293,7 @@ func TestChannelMetricsHandlers_FallbackServiceTypeForLegacyConfig(t *testing.T)
 				t.Fatalf("write config: %v", err)
 			}
 
-			cfgManager, err := config.NewConfigManager(configFile)
+			cfgManager, err := config.NewConfigManager(configFile, "")
 			if err != nil {
 				t.Fatalf("new config manager: %v", err)
 			}
@@ -523,7 +523,7 @@ func TestResumeChannel_RestoresBlacklistedKeys(t *testing.T) {
 				t.Fatalf("write config: %v", err)
 			}
 
-			cfgManager, err := config.NewConfigManager(configFile)
+			cfgManager, err := config.NewConfigManager(configFile, "")
 			if err != nil {
 				t.Fatalf("new config manager: %v", err)
 			}

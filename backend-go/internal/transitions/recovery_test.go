@@ -33,7 +33,7 @@ func TestRestoreDisabledKeysAndActivate(t *testing.T) {
 		t.Fatalf("write config: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("new config manager: %v", err)
 	}

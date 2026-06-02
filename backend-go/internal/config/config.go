@@ -224,6 +224,7 @@ type ConfigManager struct {
 	mu                    sync.RWMutex
 	config                Config
 	configFile            string
+	backupDir             string
 	watcher               *fsnotify.Watcher
 	failedKeysCache       map[string]*FailedKey
 	keyRecoveryTime       time.Duration

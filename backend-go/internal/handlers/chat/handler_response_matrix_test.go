@@ -27,7 +27,7 @@ func setupChatTestConfigManager(t *testing.T, upstream []config.UpstreamConfig) 
 	if err := os.WriteFile(tmpFile, data, 0644); err != nil {
 		t.Fatalf("write config file: %v", err)
 	}
-	cm, err := config.NewConfigManager(tmpFile)
+	cm, err := config.NewConfigManager(tmpFile, "")
 	if err != nil {
 		t.Fatalf("NewConfigManager() err = %v", err)
 	}

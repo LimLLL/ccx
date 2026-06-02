@@ -29,7 +29,7 @@ func setupDeleteLogsConfigManager(t *testing.T, upstream []config.UpstreamConfig
 		t.Fatalf("写入配置文件失败: %v", err)
 	}
 
-	cm, err := config.NewConfigManager(configPath)
+	cm, err := config.NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("创建配置管理器失败: %v", err)
 	}

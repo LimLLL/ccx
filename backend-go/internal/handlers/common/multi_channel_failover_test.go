@@ -43,7 +43,7 @@ func newAffinityTestEnv(t *testing.T, cfg config.Config) affinityTestEnv {
 		t.Fatalf("写入临时配置失败: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		os.RemoveAll(tmpDir)
 		t.Fatalf("创建配置管理器失败: %v", err)

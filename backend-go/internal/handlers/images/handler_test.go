@@ -19,7 +19,7 @@ func newImagesTestConfigManager(t *testing.T) *config.ConfigManager {
 	if err := os.WriteFile(cfgFile, []byte(`{"upstream":[],"imagesUpstream":[]}`), 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(cfgFile)
+	cfgManager, err := config.NewConfigManager(cfgFile, "")
 	if err != nil {
 		t.Fatalf("config manager: %v", err)
 	}
@@ -108,7 +108,7 @@ func TestAddUpstream_RejectsUnsupportedServiceType(t *testing.T) {
 	if err := os.WriteFile(cfgFile, []byte(`{"upstream":[],"imagesUpstream":[]}`), 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(cfgFile)
+	cfgManager, err := config.NewConfigManager(cfgFile, "")
 	if err != nil {
 		t.Fatalf("config manager: %v", err)
 	}
@@ -137,7 +137,7 @@ func TestHandler_MissingModel(t *testing.T) {
 	if err := os.WriteFile(cfgFile, []byte(`{"upstream":[]}`), 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(cfgFile)
+	cfgManager, err := config.NewConfigManager(cfgFile, "")
 	if err != nil {
 		t.Fatalf("config manager: %v", err)
 	}

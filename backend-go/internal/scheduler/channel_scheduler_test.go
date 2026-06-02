@@ -41,7 +41,7 @@ func createTestConfigManager(t *testing.T, cfg config.Config) (*config.ConfigMan
 	}
 
 	// 创建配置管理器
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		os.RemoveAll(tmpDir)
 		t.Fatalf("创建配置管理器失败: %v", err)

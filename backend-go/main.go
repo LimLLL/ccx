@@ -57,6 +57,7 @@ type cliOptions struct {
 	ConfigPath string
 	StateDir   string
 	LogDir     string
+	BackupDir  string
 }
 
 type runtimePaths struct {
@@ -66,6 +67,7 @@ type runtimePaths struct {
 	ConversationStatePath      string
 	ScheduledRecoveryStatePath string
 	LogDir                     string
+	BackupDir                  string
 }
 
 func parseCLIArgs(args []string) (cliOptions, error) {
@@ -87,6 +89,7 @@ func parseCLIArgs(args []string) (cliOptions, error) {
 	fs.StringVar(&opts.ConfigPath, "config", "", "指定配置文件路径")
 	fs.StringVar(&opts.StateDir, "statedir", "", "指定运行时状态目录")
 	fs.StringVar(&opts.LogDir, "logdir", "", "指定日志目录")
+	fs.StringVar(&opts.BackupDir, "backupdir", "", "指定配置备份目录")
 
 	if err := fs.Parse(args); err != nil {
 		if err == flag.ErrHelp {
@@ -120,15 +123,17 @@ func writeCLIHelp(out io.Writer) {
   --config PATH       指定运行时配置文件路径，默认 .config/config.json
   --statedir DIR      指定运行时状态目录，默认 .config
   --logdir DIR        指定日志目录，优先级高于 LOG_DIR，默认 logs
+	  --backupdir DIR     指定配置备份目录，默认 配置文件同级目录下的 backups
 
 示例:
-  ccx --config ~/.config/ccx/config.json --statedir ~/.local/state/ccx --logdir ~/.local/state/ccx/logs
+  ccx --config ~/.config/ccx/config.json --statedir ~/.local/state/ccx --logdir ~/.local/state/ccx/logs --backupdir ~/.local/state/ccx/backups
 
 说明:
   --config 只改变配置文件位置。
   --statedir 会让 metrics.db、conversation_state.json、scheduled_recovery_state.json
   写入指定目录；不指定时保持默认 .config。
   --logdir 只影响日志目录。
+	  --backupdir 只影响配置备份目录，不指定时默认为配置文件同级目录下的 backups。
 `)
 }
 
@@ -190,6 +195,16 @@ func resolveRuntimePaths(opts cliOptions, envCfg *config.EnvConfig) (runtimePath
 		logDir = expandedLogDir
 	}
 
+	// 备份目录：CLI > 默认（配置文件同级 backups）
+	backupDir := filepath.Join(filepath.Dir(configPath), "backups")
+	if opts.BackupDir != "" {
+		expandedBackupDir, err := expandUserPath(opts.BackupDir)
+		if err != nil {
+			return runtimePaths{}, fmt.Errorf("解析配置备份目录失败: %w", err)
+		}
+		backupDir = expandedBackupDir
+	}
+
 	return runtimePaths{
 		ConfigPath:                 configPath,
 		StateDir:                   stateDir,
@@ -197,6 +212,7 @@ func resolveRuntimePaths(opts cliOptions, envCfg *config.EnvConfig) (runtimePath
 		ConversationStatePath:      filepath.Join(stateDir, conversationStateFile),
 		ScheduledRecoveryStatePath: filepath.Join(stateDir, scheduledRecoveryStateFileName),
 		LogDir:                     logDir,
+		BackupDir:                  backupDir,
 	}, nil
 }
 
@@ -246,7 +262,7 @@ func main() {
 		log.Fatalf("初始化日志系统失败: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(paths.ConfigPath)
+	cfgManager, err := config.NewConfigManager(paths.ConfigPath, paths.BackupDir)
 	if err != nil {
 		log.Fatalf("初始化配置管理器失败: %v", err)
 	}

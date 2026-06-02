@@ -24,7 +24,7 @@ func TestUpdateUpstream_NoChangeSkipsSave(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}

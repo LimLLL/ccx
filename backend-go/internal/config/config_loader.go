@@ -19,9 +19,10 @@ const (
 )
 
 // NewConfigManager 创建配置管理器
-func NewConfigManager(configFile string) (*ConfigManager, error) {
+func NewConfigManager(configFile string, backupDir string) (*ConfigManager, error) {
 	cm := &ConfigManager{
 		configFile:      configFile,
+		backupDir:       backupDir,
 		failedKeysCache: make(map[string]*FailedKey),
 		keyRecoveryTime: keyRecoveryTime,
 		maxFailureCount: maxFailureCount,
@@ -420,7 +421,10 @@ func (cm *ConfigManager) backupConfig() {
 		return
 	}
 
-	backupDir := filepath.Join(filepath.Dir(cm.configFile), "backups")
+	backupDir := cm.backupDir
+	if backupDir == "" {
+		backupDir = filepath.Join(filepath.Dir(cm.configFile), "backups")
+	}
 	if err := os.MkdirAll(backupDir, 0700); err != nil { // 仅所有者可访问
 		log.Printf("[Config-Backup] 警告: 创建备份目录失败: %v", err)
 		return

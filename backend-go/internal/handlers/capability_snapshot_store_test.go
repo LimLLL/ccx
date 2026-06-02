@@ -206,7 +206,7 @@ func TestGetCapabilitySnapshot_PreservesSameSourceRedirectProtocol(t *testing.T)
 	if err := os.WriteFile(configFile, data, 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}

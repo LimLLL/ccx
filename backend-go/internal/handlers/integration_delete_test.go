@@ -37,7 +37,7 @@ func TestGetChannelLogs_AfterChannelDeletion(t *testing.T) {
 		t.Fatalf("写入配置文件失败: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("创建配置管理器失败: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestGetChannelDashboard_AfterChannelDeletion(t *testing.T) {
 		t.Fatalf("写入配置文件失败: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("创建配置管理器失败: %v", err)
 	}

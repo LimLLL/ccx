@@ -44,7 +44,7 @@ func TestCancelCapabilityTestJob_HTTP(t *testing.T) {
 	if err := os.WriteFile(configFile, []byte(`{"upstream":[]}`), 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -88,7 +88,7 @@ func TestGetCapabilityTestJobStatus_HTTP(t *testing.T) {
 	if err := os.WriteFile(configFile, []byte(`{"upstream":[{"name":"channel","service_type":"claude","base_url":"https://example.com","api_keys":["test"]}]}`), 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -124,7 +124,7 @@ func TestCapabilityCacheHit_DoesNotBindExecutionLookupKey(t *testing.T) {
 	if err := os.WriteFile(configFile, []byte(configJSON), 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -195,7 +195,7 @@ func TestRetryCapabilityTestModel_HTTP_RejectsUnknownModel(t *testing.T) {
 	if err := os.WriteFile(configFile, []byte(`{"upstream":[{"name":"channel","service_type":"claude","base_url":"https://example.com","api_keys":["test"]}]}`), 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -231,7 +231,7 @@ func TestRetryCapabilityTestModel_HTTP_RejectsRunningJob(t *testing.T) {
 	if err := os.WriteFile(configFile, []byte(`{"upstream":[{"name":"channel","service_type":"claude","base_url":"https://example.com","api_keys":["test"]}]}`), 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -268,7 +268,7 @@ func TestRetryCapabilityTestModel_HTTP_RejectsNonRetryableModel(t *testing.T) {
 	if err := os.WriteFile(configFile, []byte(`{"upstream":[{"name":"channel","service_type":"claude","base_url":"https://example.com","api_keys":["test"]}]}`), 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -319,7 +319,7 @@ func TestExecuteModelTest_RecordsCapabilityLogOnSuccess(t *testing.T) {
 		t.Fatalf("write config failed: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -378,7 +378,7 @@ func TestExecuteModelTest_NativeProtocolDoesNotExposeActualModel(t *testing.T) {
 		t.Fatalf("write config failed: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -433,7 +433,7 @@ func TestExecuteModelTest_RecordsCapabilityLogOnFailure(t *testing.T) {
 		t.Fatalf("write config failed: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -495,7 +495,7 @@ func TestExecuteModelTest_TruncatesLargeFailureBody(t *testing.T) {
 		t.Fatalf("write config failed: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -549,7 +549,7 @@ func TestExecuteModelTest_RespectsAutoBlacklistBalance(t *testing.T) {
 		t.Fatalf("write config failed: %v", err)
 	}
 
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -599,7 +599,7 @@ func TestResumedCancelledJob_ReturnsUpdatedState(t *testing.T) {
 	if err := os.WriteFile(configFile, []byte(`{"upstream":[{"name":"test-channel","serviceType":"claude","baseUrl":"https://example.com","apiKeys":["test"]}]}`), 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -678,7 +678,7 @@ func TestCapabilityPreviousJobReuse_ByIdentityAcrossChannels(t *testing.T) {
 	if err := os.WriteFile(configFile, []byte(configJSON), 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}
@@ -754,7 +754,7 @@ func TestCapabilityRunningJobReuse_ByIdentityAcrossChannels(t *testing.T) {
 	if err := os.WriteFile(configFile, []byte(configJSON), 0644); err != nil {
 		t.Fatalf("write config failed: %v", err)
 	}
-	cfgManager, err := config.NewConfigManager(configFile)
+	cfgManager, err := config.NewConfigManager(configFile, "")
 	if err != nil {
 		t.Fatalf("create config manager failed: %v", err)
 	}

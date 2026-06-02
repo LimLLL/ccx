@@ -30,7 +30,7 @@ func TestUpdateUpstream_BaseURLConsistency(t *testing.T) {
 	}
 
 	// 初始化配置管理器
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -117,7 +117,7 @@ func TestAddImagesUpstream_RejectsUnsupportedServiceType(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestUpdateResponsesUpstream_BaseURLConsistency(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -198,7 +198,7 @@ func TestUpdateResponsesUpstream_ReasoningParamStyle(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -236,7 +236,7 @@ func TestUpdateGeminiUpstream_BaseURLConsistency(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -460,7 +460,7 @@ func TestAddUpstream_BaseURLDeduplication(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -526,7 +526,7 @@ func TestLoadConfig_BackfillsLegacyServiceTypeDefaults(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -567,7 +567,7 @@ func TestUpdateChatUpstreamCanSetNormalizeNonstandardChatRoles(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -618,7 +618,7 @@ func TestRequestTimeoutMsEffectiveAndUpdates(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -669,7 +669,7 @@ func TestAddUpstreamRejectsNegativeRequestTimeoutMs(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}
@@ -711,7 +711,7 @@ func TestUpdateGeminiUpstream_AdvancedOptions(t *testing.T) {
 		t.Fatalf("写入初始配置失败: %v", err)
 	}
 
-	cm, err := NewConfigManager(configPath)
+	cm, err := NewConfigManager(configPath, "")
 	if err != nil {
 		t.Fatalf("初始化配置管理器失败: %v", err)
 	}

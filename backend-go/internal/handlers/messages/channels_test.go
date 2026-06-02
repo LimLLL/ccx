@@ -24,7 +24,7 @@ func setupTestConfigManager(t *testing.T, upstream []config.UpstreamConfig) *con
 	if err := os.WriteFile(tmpFile, data, 0644); err != nil {
 		t.Fatalf("写入配置文件失败: %v", err)
 	}
-	cm, err := config.NewConfigManager(tmpFile)
+	cm, err := config.NewConfigManager(tmpFile, "")
 	if err != nil {
 		t.Fatalf("创建配置管理器失败: %v", err)
 	}
