@@ -14,6 +14,12 @@ func WebAuthMiddleware(envCfg *config.EnvConfig, cfgManager *config.ConfigManage
 	return func(c *gin.Context) {
 		path := c.Request.URL.Path
 
+		// OPTIONS 预检请求直接放行（浏览器 CORS 预检不携带自定义 header，不应要求认证）
+		if c.Request.Method == "OPTIONS" {
+			c.Next()
+			return
+		}
+
 		// 公开端点直接放行（健康检查固定为 /health）
 		if path == "/health" {
 			c.Next()
