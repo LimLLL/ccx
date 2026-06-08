@@ -114,7 +114,7 @@ export function buildChannelPayload(form: ChannelFormLike): Omit<Channel, 'index
   }
 
   const streamToolCallIdleTimeoutMs = Number(form.streamToolCallIdleTimeoutMs)
-  if (Number.isInteger(streamToolCallIdleTimeoutMs) && streamToolCallIdleTimeoutMs > 0) {
+  if (Number.isInteger(streamToolCallIdleTimeoutMs) && streamToolCallIdleTimeoutMs >= 30000) {
     channelData.streamToolCallIdleTimeoutMs = streamToolCallIdleTimeoutMs
   }
 

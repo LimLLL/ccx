@@ -92,7 +92,7 @@
             <!-- 展开的错误详情 -->
             <v-expand-transition>
               <div v-if="expandedIndex === i && log.errorInfo" class="px-4 py-2 log-error-info">
-                {{ log.errorInfo }}
+                {{ formatErrorInfo(log.errorInfo) }}
               </div>
             </v-expand-transition>
             <v-divider v-if="i < logs.length - 1" />
@@ -192,6 +192,26 @@ const calculateDurations = (log: ChannelLogEntry) => {
 const formatDurationSeconds = (durationMs: number): string => {
   const seconds = durationMs / 1000
   return `${Number.parseFloat(seconds.toPrecision(3))}s`
+}
+
+const formatErrorInfo = (errorInfo: string): string => {
+  const text = errorInfo.trim()
+  if (text.startsWith('upstream returned empty stream response')) {
+    const diagnostic = text.replace(/^upstream returned empty stream response:?\s*/, '').trim()
+    return diagnostic
+      ? `空流响应：上游 HTTP 200 返回 SSE 流后结束，但未检测到文本或语义内容（${diagnostic}）`
+      : '空流响应：上游 HTTP 200 返回 SSE 流后结束，但未检测到文本或语义内容'
+  }
+  if (text.startsWith('upstream returned empty non-stream response')) {
+    return '空响应：上游 HTTP 200 返回非流式响应，但未检测到文本或语义内容'
+  }
+  if (text.startsWith('stream first content timeout')) {
+    return '流式首内容超时：上游 HTTP 200 后未在配置窗口内返回有效内容'
+  }
+  if (text.startsWith('stream stalled after first content')) {
+    return '流式断流：首个有效内容后未在配置窗口内继续返回上游活动'
+  }
+  return errorInfo
 }
 
 const interfaceTypeColor = (type: string): string => {

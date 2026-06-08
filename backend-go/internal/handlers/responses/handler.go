@@ -1131,6 +1131,9 @@ func handleStreamSuccess(
 			nowToolCallPending := postCommitToolTracker.HasPendingToolCall()
 			nextTimeoutMs := resolvePostCommitTimeoutMs()
 			hasActivity := common.HasStreamEventActivity(sl.text + "\n")
+			if nowToolCallPending && common.HasSSEFrame(sl.text) {
+				hasActivity = true
+			}
 			if hasActivity || toolCallStateChanged {
 				if nowToolCallPending {
 					common.MarkStreamToolCallActivity(c)

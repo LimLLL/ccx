@@ -47,7 +47,7 @@ func streamPreflightEmptyError(preflight *StreamPreflightResult) error {
 type StreamPreflightTimeouts struct {
 	FirstContentTimeoutMs int // 阶段A：首个有效内容等待超时（ms，范围 5000-300000）
 	InactivityTimeoutMs   int // 阶段B：首字后连续性确认窗口（ms，范围 1000-180000）
-	ToolCallIdleTimeoutMs int // 工具调用空闲超时（ms，范围 1000-180000）
+	ToolCallIdleTimeoutMs int // 工具调用空闲超时（ms，范围 30000-300000）
 }
 
 // ResolveStreamFirstContentTimeout 解析首字等待超时：渠道 >0 覆盖全局，否则继承全局
@@ -84,10 +84,10 @@ func ResolveStreamToolCallIdleTimeout(channelValue int, globalValue int) int {
 	if channelValue > 0 {
 		val = channelValue
 	}
-	if val < 1000 {
-		val = 1000
-	} else if val > 180000 {
-		val = 180000
+	if val < 30000 {
+		val = 30000
+	} else if val > 300000 {
+		val = 300000
 	}
 	return val
 }
@@ -752,6 +752,12 @@ func HasStreamEventActivity(event string) bool {
 	return false
 }
 
+// HasSSEFrame 判断是否确实收到了一个上游 SSE 帧。
+// 工具调用参数可能会长时间批量输出；pending 阶段收到心跳/空帧也说明连接仍活着。
+func HasSSEFrame(event string) bool {
+	return event != ""
+}
+
 func summarizeStreamEventForIdleLog(event string) string {
 	eventType, blockIndex, blockType := extractSSEEventInfo(event)
 	lineCount, firstField := summarizeSSELineFields(event)
@@ -1131,6 +1137,8 @@ func ProcessStreamEvents(
 			postCommitTimer.Reset(time.Duration(activeTimeoutMs) * time.Millisecond)
 		}
 	}
+	keepaliveTicker := time.NewTicker(15 * time.Second)
+	defer keepaliveTicker.Stop()
 
 	for {
 		select {
@@ -1140,6 +1148,7 @@ func ProcessStreamEvents(
 				usage := logStreamCompletion(ctx, envCfg, startTime)
 				return usage, nil
 			}
+			keepaliveTicker.Reset(15 * time.Second)
 			prevTextLen := ctx.OutputTextBuffer.Len()
 			prevToolCallPending := toolCallPending
 			ProcessStreamEvent(c, w, flusher, event, ctx, envCfg, requestBody)
@@ -1157,6 +1166,9 @@ func ProcessStreamEvents(
 					activeTimeoutMs = timeouts.InactivityTimeoutMs
 				}
 				eventHasActivity = eventHasActivity || activeTimeoutMs > 0
+			}
+			if nowToolCallPending && HasSSEFrame(event) {
+				eventHasActivity = true
 			}
 			if eventHasActivity {
 				if nowToolCallPending {
@@ -1219,6 +1231,14 @@ func ProcessStreamEvents(
 			}
 			progress.Finish("stalled")
 			return nil, ErrStreamPostCommitStalled
+		case <-keepaliveTicker.C:
+			if toolCallPending && !ctx.ClientGone {
+				if _, err := w.Write([]byte(": keepalive\n\n")); err != nil {
+					ctx.ClientGone = true
+				} else {
+					flusher.Flush()
+				}
+			}
 		}
 	}
 }

@@ -334,7 +334,7 @@ func main() {
 			ConsecutiveFailuresThreshold: 3,
 			StreamFirstContentTimeoutMs:  30000,
 			StreamInactivityTimeoutMs:    20000,
-			StreamToolCallIdleTimeoutMs:  30000,
+			StreamToolCallIdleTimeoutMs:  120000,
 		}
 		if cfg.CircuitBreaker != nil {
 			if cfg.CircuitBreaker.WindowSize != nil {

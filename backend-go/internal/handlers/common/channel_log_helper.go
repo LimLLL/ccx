@@ -101,6 +101,7 @@ func CompleteLog(
 		return
 	}
 
+	errorInfo = normalizeChannelLogErrorInfo(errorInfo)
 	if len(errorInfo) > 200 {
 		errorInfo = errorInfo[:200]
 	}
@@ -193,6 +194,7 @@ func RecordChannelLogWithSource(
 	if channelLogStore == nil || metricsKey == "" {
 		return
 	}
+	errorInfo = normalizeChannelLogErrorInfo(errorInfo)
 	if len(errorInfo) > 200 {
 		errorInfo = errorInfo[:200]
 	}
@@ -230,4 +232,25 @@ func RecordChannelLogWithSource(
 		Status:        status,
 		CompletedAt:   &now,
 	})
+}
+
+func normalizeChannelLogErrorInfo(errorInfo string) string {
+	trimmed := strings.TrimSpace(errorInfo)
+	switch {
+	case strings.HasPrefix(trimmed, ErrEmptyStreamResponse.Error()):
+		diagnostic := strings.TrimSpace(strings.TrimPrefix(trimmed, ErrEmptyStreamResponse.Error()))
+		diagnostic = strings.TrimSpace(strings.TrimPrefix(diagnostic, ":"))
+		if diagnostic != "" {
+			return "空流响应：上游 HTTP 200 返回 SSE 流后结束，但未检测到文本或语义内容（" + diagnostic + "）"
+		}
+		return "空流响应：上游 HTTP 200 返回 SSE 流后结束，但未检测到文本或语义内容"
+	case strings.HasPrefix(trimmed, ErrEmptyNonStreamResponse.Error()):
+		return "空响应：上游 HTTP 200 返回非流式响应，但未检测到文本或语义内容"
+	case strings.HasPrefix(trimmed, ErrStreamFirstContentTimeout.Error()):
+		return "流式首内容超时：上游 HTTP 200 后未在配置窗口内返回有效内容"
+	case strings.HasPrefix(trimmed, ErrStreamStalled.Error()):
+		return "流式断流：首个有效内容后未在配置窗口内继续返回上游活动"
+	default:
+		return errorInfo
+	}
 }

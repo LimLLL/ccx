@@ -135,8 +135,8 @@ func SetCircuitBreaker(cfgManager *config.ConfigManager) gin.HandlerFunc {
 			}
 		}
 		if req.StreamToolCallIdleTimeoutMs != nil {
-			if *req.StreamToolCallIdleTimeoutMs < 1000 || *req.StreamToolCallIdleTimeoutMs > 180000 {
-				c.JSON(400, gin.H{"error": "streamToolCallIdleTimeoutMs 必须在 1000-180000 之间"})
+			if *req.StreamToolCallIdleTimeoutMs < 30000 || *req.StreamToolCallIdleTimeoutMs > 300000 {
+				c.JSON(400, gin.H{"error": "streamToolCallIdleTimeoutMs 必须在 30000-300000 之间"})
 				return
 			}
 		}

@@ -132,3 +132,24 @@ func TestCompleteLog_LeavesRealFailuresAsFailed(t *testing.T) {
 		t.Fatalf("status = %q, want %q", logs[0].Status, metrics.StatusFailed)
 	}
 }
+
+func TestCompleteLog_NormalizesEmptyStreamErrorInfo(t *testing.T) {
+	store := metrics.NewChannelLogStore()
+	requestID := CreatePendingLog(store, "test-metrics-key-5", 0, "model-a", "", "sk-test-secret", "https://example.com", "Messages", "", metrics.RequestSourceProxy)
+
+	CompleteLog(store, "test-metrics-key-5", requestID, 200, false, "upstream returned empty stream response: 检测到空流，但未匹配到明确类别", false)
+
+	logs := store.Get("test-metrics-key-5")
+	if len(logs) != 1 {
+		t.Fatalf("logs count = %d, want 1", len(logs))
+	}
+	if !strings.HasPrefix(logs[0].ErrorInfo, "空流响应：") {
+		t.Fatalf("errorInfo = %q, want empty stream display text", logs[0].ErrorInfo)
+	}
+	if strings.Contains(logs[0].ErrorInfo, "断流") {
+		t.Fatalf("errorInfo = %q, should not classify empty stream as stalled stream", logs[0].ErrorInfo)
+	}
+	if !strings.Contains(logs[0].ErrorInfo, "检测到空流") {
+		t.Fatalf("errorInfo = %q, want diagnostic preserved", logs[0].ErrorInfo)
+	}
+}

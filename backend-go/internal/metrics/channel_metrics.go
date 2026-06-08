@@ -68,9 +68,9 @@ const (
 	defaultCircuitBackoffBase                    time.Duration = 30 * time.Second
 	defaultCircuitBackoffMax                     time.Duration = 10 * time.Minute
 	// 流式健康检测默认参数
-	defaultStreamFirstContentTimeoutMs = 30000 // HTTP 200 后首个有效内容等待超时（30秒）
-	defaultStreamInactivityTimeoutMs   = 20000 // 首字后连续性确认窗口（20秒）
-	defaultStreamToolCallIdleTimeoutMs = 30000 // 工具调用空闲超时（30秒）
+	defaultStreamFirstContentTimeoutMs = 30000  // HTTP 200 后首个有效内容等待超时（30秒）
+	defaultStreamInactivityTimeoutMs   = 20000  // 首字后连续性确认窗口（20秒）
+	defaultStreamToolCallIdleTimeoutMs = 120000 // 工具调用空闲超时（120秒）
 )
 
 // RequestRecord 带时间戳的请求记录（扩展版，支持 Token、Cache 和失败分类数据）。
@@ -198,6 +198,9 @@ func NewMetricsManager() *MetricsManager {
 		circuitBackoffBase:           defaultCircuitBackoffBase,
 		circuitBackoffMax:            defaultCircuitBackoffMax,
 		halfOpenSuccessTarget:        defaultHalfOpenSuccessThreshold,
+		streamFirstContentTimeoutMs:  defaultStreamFirstContentTimeoutMs,
+		streamInactivityTimeoutMs:    defaultStreamInactivityTimeoutMs,
+		streamToolCallIdleTimeoutMs:  defaultStreamToolCallIdleTimeoutMs,
 		stopCh:                       make(chan struct{}),
 	}
 	// 启动后台熔断恢复任务
@@ -2139,7 +2142,7 @@ type CircuitBreakerParams struct {
 	// 流式健康检测参数
 	StreamFirstContentTimeoutMs int `json:"streamFirstContentTimeoutMs"` // HTTP 200 后首个有效内容等待超时（ms，5000-300000）
 	StreamInactivityTimeoutMs   int `json:"streamInactivityTimeoutMs"`   // 首字后连续性确认窗口（ms，1000-180000）
-	StreamToolCallIdleTimeoutMs int `json:"streamToolCallIdleTimeoutMs"` // 工具调用空闲超时（ms，1000-180000）
+	StreamToolCallIdleTimeoutMs int `json:"streamToolCallIdleTimeoutMs"` // 工具调用空闲超时（ms，30000-300000）
 }
 
 // GetCircuitBreakerConfig 获取当前运行时生效的熔断器配置
@@ -2177,10 +2180,10 @@ func (m *MetricsManager) UpdateCircuitBreakerConfig(params CircuitBreakerParams)
 	} else if params.StreamInactivityTimeoutMs > 180000 {
 		params.StreamInactivityTimeoutMs = 180000
 	}
-	if params.StreamToolCallIdleTimeoutMs < 1000 {
-		params.StreamToolCallIdleTimeoutMs = 1000
-	} else if params.StreamToolCallIdleTimeoutMs > 180000 {
-		params.StreamToolCallIdleTimeoutMs = 180000
+	if params.StreamToolCallIdleTimeoutMs < 30000 {
+		params.StreamToolCallIdleTimeoutMs = 30000
+	} else if params.StreamToolCallIdleTimeoutMs > 300000 {
+		params.StreamToolCallIdleTimeoutMs = 300000
 	}
 
 	m.mu.Lock()

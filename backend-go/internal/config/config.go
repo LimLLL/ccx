@@ -203,7 +203,7 @@ type CircuitBreakerConfig struct {
 	// 流式健康检测全局默认参数
 	StreamFirstContentTimeoutMs *int `json:"streamFirstContentTimeoutMs,omitempty"` // HTTP 200 后首个有效内容等待超时（ms，范围 5000-300000）
 	StreamInactivityTimeoutMs   *int `json:"streamInactivityTimeoutMs,omitempty"`   // 首字后连续性确认窗口（ms，范围 1000-180000）
-	StreamToolCallIdleTimeoutMs *int `json:"streamToolCallIdleTimeoutMs,omitempty"` // 工具调用空闲超时（ms，范围 1000-180000）
+	StreamToolCallIdleTimeoutMs *int `json:"streamToolCallIdleTimeoutMs,omitempty"` // 工具调用空闲超时（ms，范围 30000-300000）
 }
 
 type Config struct {
@@ -679,10 +679,10 @@ func (cm *ConfigManager) SetCircuitBreakerConfig(update CircuitBreakerConfig) er
 	}
 	if update.StreamToolCallIdleTimeoutMs != nil {
 		v := *update.StreamToolCallIdleTimeoutMs
-		if v < 1000 {
-			v = 1000
-		} else if v > 180000 {
-			v = 180000
+		if v < 30000 {
+			v = 30000
+		} else if v > 300000 {
+			v = 300000
 		}
 		cb.StreamToolCallIdleTimeoutMs = &v
 	}

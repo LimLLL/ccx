@@ -1196,14 +1196,14 @@
                   <input
                     v-model.number="form.streamToolCallIdleTimeoutMs"
                     type="range"
-                    min="1000"
-                    max="180000"
+                    min="30000"
+                    max="300000"
                     step="1000"
                     class="w-100"
                     :disabled="!form.streamToolCallIdleTimeoutEnabled"
                   />
                   <div class="d-flex justify-space-between text-caption text-medium-emphasis">
-                    <span>1s</span><span>180s</span>
+                    <span>30s</span><span>300s</span>
                   </div>
                   <div class="text-caption text-medium-emphasis mt-2">
                     {{ form.streamToolCallIdleTimeoutEnabled ? t('addChannel.streamTimeoutOverrideHint') : t('addChannel.streamTimeoutInheritHint') }}
@@ -2055,20 +2055,21 @@ const sortModelNamesDesc = (models: string[]): string[] => {
 const defaultStreamTimeouts = {
   firstContentMs: 30000,
   inactivityMs: 20000,
-  toolCallIdleMs: 30000,
+  toolCallIdleMs: 120000,
 } as const
 
+// 工具调用 idle 预设按低速 5 TPS 粗估：60/120/300s 分别预留约 300/600/1500 token 的参数生成窗口。
 const streamTimeoutPresets = {
   gentle: {
     firstContentMs: 60000,
     inactivityMs: 45000,
-    toolCallIdleMs: 45000,
+    toolCallIdleMs: 300000,
   },
   balanced: defaultStreamTimeouts,
   aggressive: {
     firstContentMs: 15000,
     inactivityMs: 10000,
-    toolCallIdleMs: 15000,
+    toolCallIdleMs: 60000,
   },
 } as const
 
@@ -2668,8 +2669,8 @@ const loadChannelData = (channel: Channel) => {
   form.streamFirstContentTimeoutMs = channel.streamFirstContentTimeoutMs && channel.streamFirstContentTimeoutMs > 0 ? channel.streamFirstContentTimeoutMs : defaultStreamTimeouts.firstContentMs
   form.streamInactivityTimeoutEnabled = !!(channel.streamInactivityTimeoutMs && channel.streamInactivityTimeoutMs > 0)
   form.streamInactivityTimeoutMs = channel.streamInactivityTimeoutMs && channel.streamInactivityTimeoutMs > 0 ? channel.streamInactivityTimeoutMs : defaultStreamTimeouts.inactivityMs
-  form.streamToolCallIdleTimeoutEnabled = !!(channel.streamToolCallIdleTimeoutMs && channel.streamToolCallIdleTimeoutMs > 0)
-  form.streamToolCallIdleTimeoutMs = channel.streamToolCallIdleTimeoutMs && channel.streamToolCallIdleTimeoutMs > 0 ? channel.streamToolCallIdleTimeoutMs : defaultStreamTimeouts.toolCallIdleMs
+  form.streamToolCallIdleTimeoutEnabled = !!(channel.streamToolCallIdleTimeoutMs && channel.streamToolCallIdleTimeoutMs >= 30000)
+  form.streamToolCallIdleTimeoutMs = channel.streamToolCallIdleTimeoutMs && channel.streamToolCallIdleTimeoutMs >= 30000 ? channel.streamToolCallIdleTimeoutMs : defaultStreamTimeouts.toolCallIdleMs
   form.routePrefix = channel.routePrefix || ''
   const { validPatterns, hasInvalidPatterns } = filterValidSupportedModelPatterns(channel.supportedModels || [])
   form.supportedModels = validPatterns

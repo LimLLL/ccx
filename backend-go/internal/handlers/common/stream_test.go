@@ -36,8 +36,22 @@ func TestResolveStreamPreflightTimeouts_ToolCallIdleTimeoutIsIndependent(t *test
 	}
 }
 
+func TestResolveStreamPreflightTimeouts_DefaultToolCallIdleIsLongerThanStreamIdle(t *testing.T) {
+	upstream := &config.UpstreamConfig{}
+	global := metrics.NewMetricsManager().GetCircuitBreakerConfig()
+
+	timeouts := ResolveStreamPreflightTimeouts(upstream, global)
+
+	if timeouts.ToolCallIdleTimeoutMs != 120000 {
+		t.Fatalf("ToolCallIdleTimeoutMs = %d, want 120000", timeouts.ToolCallIdleTimeoutMs)
+	}
+	if timeouts.ToolCallIdleTimeoutMs <= timeouts.InactivityTimeoutMs {
+		t.Fatalf("tool call idle timeout should be longer than regular stream idle: tool=%d stream=%d", timeouts.ToolCallIdleTimeoutMs, timeouts.InactivityTimeoutMs)
+	}
+}
+
 func TestResolveStreamPreflightTimeouts_ToolCallIdleChannelOverride(t *testing.T) {
-	upstream := &config.UpstreamConfig{StreamToolCallIdleTimeoutMs: 12000}
+	upstream := &config.UpstreamConfig{StreamToolCallIdleTimeoutMs: 60000}
 	global := metrics.CircuitBreakerParams{
 		StreamFirstContentTimeoutMs: 30000,
 		StreamInactivityTimeoutMs:   20000,
@@ -46,8 +60,8 @@ func TestResolveStreamPreflightTimeouts_ToolCallIdleChannelOverride(t *testing.T
 
 	timeouts := ResolveStreamPreflightTimeouts(upstream, global)
 
-	if timeouts.ToolCallIdleTimeoutMs != 12000 {
-		t.Fatalf("ToolCallIdleTimeoutMs = %d, want 12000", timeouts.ToolCallIdleTimeoutMs)
+	if timeouts.ToolCallIdleTimeoutMs != 60000 {
+		t.Fatalf("ToolCallIdleTimeoutMs = %d, want 60000", timeouts.ToolCallIdleTimeoutMs)
 	}
 }
 
@@ -58,10 +72,10 @@ func TestResolveStreamToolCallIdleTimeout_ClampsToRange(t *testing.T) {
 		global      int
 		wantTimeout int
 	}{
-		{name: "below minimum", channel: 999, global: 3000, wantTimeout: 1000},
-		{name: "above maximum", channel: 180001, global: 3000, wantTimeout: 180000},
-		{name: "global below minimum", channel: 0, global: 999, wantTimeout: 1000},
-		{name: "global above maximum", channel: 0, global: 180001, wantTimeout: 180000},
+		{name: "below minimum", channel: 999, global: 3000, wantTimeout: 30000},
+		{name: "above maximum", channel: 300001, global: 120000, wantTimeout: 300000},
+		{name: "global below minimum", channel: 0, global: 999, wantTimeout: 30000},
+		{name: "global above maximum", channel: 0, global: 300001, wantTimeout: 300000},
 	}
 
 	for _, tt := range tests {
@@ -122,6 +136,20 @@ func TestSummarizeStreamEventForIdleLog_RedactsPayload(t *testing.T) {
 	}
 	if strings.Contains(summary, "secret-plan") || strings.Contains(summary, "file_path") {
 		t.Fatalf("summary %q should not include raw tool arguments", summary)
+	}
+}
+
+func TestHasSSEFrame_DetectsEmptyKeepaliveFrame(t *testing.T) {
+	event := "\n"
+
+	if HasStreamEventActivity(event) {
+		t.Fatalf("empty frame should not count as regular stream activity")
+	}
+	if !HasSSEFrame(event) {
+		t.Fatalf("empty frame should still count as an upstream SSE frame for tool-call idle")
+	}
+	if HasSSEFrame("") {
+		t.Fatalf("empty string should not count as an upstream SSE frame")
 	}
 }
 

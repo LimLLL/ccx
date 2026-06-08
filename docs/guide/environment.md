@@ -75,8 +75,8 @@ METRICS_FAILURE_THRESHOLD=0.5          # 失败率阈值（0-1，默认 0.5 即 
 | 字段 | 默认值 | 范围 | 说明 |
 | --- | --- | --- | --- |
 | `streamFirstContentTimeoutMs` | `30000` | `5000-300000` | HTTP 200 后等待首个有效内容的时间。 |
-| `streamInactivityTimeoutMs` | `5000` | `1000-60000` | 首字后等待后续有效输出的空闲时间。 |
-| `streamToolCallIdleTimeoutMs` | `3000` | `1000-60000` | 工具调用 pending 阶段连续无有效输出的 idle timeout；收到有效输出会重置计时器。 |
+| `streamInactivityTimeoutMs` | `20000` | `1000-180000` | 首字后等待后续有效输出的空闲时间。 |
+| `streamToolCallIdleTimeoutMs` | `120000` | `30000-300000` | 工具调用 pending 阶段连续无上游 SSE 帧的 idle timeout；收到参数片段、状态事件或心跳帧都会重置计时器。 |
 
 `streamToolCallIdleTimeoutMs` 是破坏性字段名，旧 `streamToolCallTimeoutMs` 不再使用。该字段不是工具调用总耗时上限。
 
