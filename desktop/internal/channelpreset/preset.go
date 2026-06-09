@@ -740,6 +740,8 @@ var channelTargetConfigs = map[string]map[string]channelTargetConfig{
 				"sonnet": "ZhipuAI/GLM-5.1",
 				"opus":   "ZhipuAI/GLM-5.1",
 			},
+			NoVisionModels:      []string{"deepseek-ai/DeepSeek-V4-Flash"},
+			VisionFallbackModel: "MiniMax/MiniMax-M2.7",
 		},
 	},
 	TargetChat: {
