@@ -28,7 +28,7 @@ export type DesktopStatus = {
 }
 
 export type AgentPlatform = 'claude' | 'codex' | 'opencode'
-export type AgentProvider = 'ccx' | 'deepseek' | 'mimo' | 'compshare' | 'runapi' | 'tencent-lkeap' | 'kimi' | 'kimi-code' | 'volc-ark' | 'qianfan' | 'originrouter' | 'glm' | 'minimax' | 'dashscope' | 'opencode-zen' | 'opencode-go' | 'openai'
+export type AgentProvider = 'ccx' | 'deepseek' | 'mimo' | 'compshare' | 'runapi' | 'tencent-lkeap' | 'kimi' | 'kimi-code' | 'volc-ark' | 'qianfan' | 'originrouter' | 'glm' | 'minimax' | 'dashscope' | 'openrouter' | 'modelscope' | 'opencode-zen' | 'opencode-go' | 'openai'
 
 export type AgentConfigStatus = {
   platform: AgentPlatform

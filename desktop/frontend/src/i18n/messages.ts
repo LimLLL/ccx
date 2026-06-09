@@ -296,6 +296,8 @@ export type MessageKey =
   | 'agent.provider.opencodeZenDirect'
   | 'agent.provider.opencodeGoDirect'
   | 'agent.provider.openaiDirect'
+  | 'agent.provider.openrouterDirect'
+  | 'agent.provider.modelscopeDirect'
   | 'agent.hasOwnApiKey'
   | 'agent.promo'
   | 'agent.planPayAsYouGo'
@@ -998,6 +1000,8 @@ export const messages: Record<SupportedLocale, Messages> = {
     'agent.provider.opencodeZenDirect': 'OpenCode Zen direct',
     'agent.provider.opencodeGoDirect': 'OpenCode Go direct',
     'agent.provider.openaiDirect': 'OpenAI direct',
+    'agent.provider.openrouterDirect': 'OpenRouter direct',
+    'agent.provider.modelscopeDirect': 'ModelScope direct',
     'agent.hasOwnApiKey': 'I have my own API key',
     'agent.promo': 'Register via promotion link to claim the exclusive perk',
     'agent.planPayAsYouGo': 'Pay-as-you-go',
@@ -1697,6 +1701,8 @@ export const messages: Record<SupportedLocale, Messages> = {
     'agent.provider.opencodeZenDirect': 'OpenCode Zen 直连',
     'agent.provider.opencodeGoDirect': 'OpenCode Go 直连',
     'agent.provider.openaiDirect': 'OpenAI 直连',
+    'agent.provider.openrouterDirect': 'OpenRouter 直连',
+    'agent.provider.modelscopeDirect': 'ModelScope 直连',
     'agent.hasOwnApiKey': '我有自己的 API Key',
     'agent.promo': '通过推广链接注册领取专属福利',
     'agent.planPayAsYouGo': '按量',

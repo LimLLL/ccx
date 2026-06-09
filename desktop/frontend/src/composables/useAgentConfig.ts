@@ -34,6 +34,8 @@ const claudeProviderLabels: Record<AgentProvider | 'custom', string> = {
   glm: 'GLM',
   minimax: 'MiniMax',
   dashscope: 'DashScope',
+  openrouter: 'OpenRouter',
+  modelscope: 'ModelScope',
   'opencode-zen': 'OpenCode Zen',
   'opencode-go': 'OpenCode Go',
   openai: 'OpenAI',
@@ -56,6 +58,8 @@ const codexProviderLabels = computed<Record<AgentProvider | 'custom', string>>((
   glm: 'GLM',
   minimax: 'MiniMax',
   dashscope: 'DashScope',
+  openrouter: 'OpenRouter',
+  modelscope: 'ModelScope',
   'opencode-zen': 'OpenCode Zen',
   'opencode-go': 'OpenCode Go',
   custom: t('agent.custom'),
@@ -115,7 +119,7 @@ const migrateResult = ref<MigrateCodexSessionsResult | null>(null)
 const migrateError = ref('')
 
 const isClaudeProvider = (value?: string): value is AgentProvider => {
-  return value === 'ccx' || value === 'deepseek' || value === 'mimo' || value === 'compshare' || value === 'runapi' || value === 'tencent-lkeap' || value === 'kimi' || value === 'glm' || value === 'minimax' || value === 'dashscope' || value === 'opencode-zen' || value === 'opencode-go'
+  return value === 'ccx' || value === 'deepseek' || value === 'mimo' || value === 'compshare' || value === 'runapi' || value === 'tencent-lkeap' || value === 'kimi' || value === 'glm' || value === 'minimax' || value === 'dashscope' || value === 'openrouter' || value === 'modelscope' || value === 'opencode-zen' || value === 'opencode-go'
 }
 
 // Codex 支持快捷模式/插件模式切换的第三方 provider
@@ -158,6 +162,10 @@ const claudeTargetBaseUrl = () => {
       return 'https://api.minimaxi.com/anthropic'
     case 'dashscope':
       return selectedDashScopePlan.value
+    case 'openrouter':
+      return 'https://openrouter.ai/api'
+    case 'modelscope':
+      return 'https://api-inference.modelscope.cn'
     case 'opencode-zen':
       return 'https://opencode.ai/zen'
     case 'opencode-go':
@@ -177,6 +185,8 @@ const codexTargetBaseUrl = () => {
       return 'https://dashscope.aliyuncs.com/compatible-mode/v1'
     case 'runapi':
       return 'https://runapi.co/v1'
+    case 'openrouter':
+      return 'https://openrouter.ai/api/v1'
     case 'opencode-zen':
       return 'https://opencode.ai/zen/v1'
     case 'opencode-go':
@@ -200,6 +210,10 @@ const openCodeTargetBaseUrl = () => {
       return 'https://api.minimaxi.com/v1'
     case 'runapi':
       return 'https://runapi.co/v1'
+    case 'openrouter':
+      return 'https://openrouter.ai/api/v1'
+    case 'modelscope':
+      return 'https://api-inference.modelscope.cn/v1'
     case 'opencode-zen':
       return 'https://opencode.ai/zen/v1'
     case 'opencode-go':

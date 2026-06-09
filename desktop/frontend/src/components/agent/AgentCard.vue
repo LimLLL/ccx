@@ -243,6 +243,7 @@ const openFileInEditor = async (editorPath: string, filePath: string) => {
             <option value="ccx">{{ t('agent.provider.localGateway') }}</option>
             <option value="openai">{{ t('agent.provider.openaiDirect') }}</option>
             <option value="runapi">{{ t('agent.provider.runapiDirect') }}</option>
+            <option value="openrouter">{{ t('agent.provider.openrouterDirect') }}</option>
             <option value="dashscope">{{ t('agent.provider.dashscopeDirect') }}</option>
             <option value="opencode-zen">{{ t('agent.provider.opencodeZenDirect') }}</option>
             <option value="opencode-go">{{ t('agent.provider.opencodeGoDirect') }}</option>
@@ -324,6 +325,8 @@ const openFileInEditor = async (editorPath: string, filePath: string) => {
             <option value="kimi">{{ t('agent.provider.kimiDirect') }}</option>
             <option value="glm">{{ t('agent.provider.glmDirect') }}</option>
             <option value="minimax">{{ t('agent.provider.minimaxDirect') }}</option>
+            <option value="openrouter">{{ t('agent.provider.openrouterDirect') }}</option>
+            <option value="modelscope">{{ t('agent.provider.modelscopeDirect') }}</option>
             <option value="opencode-zen">{{ t('agent.provider.opencodeZenDirect') }}</option>
             <option value="opencode-go">{{ t('agent.provider.opencodeGoDirect') }}</option>
           </select>
