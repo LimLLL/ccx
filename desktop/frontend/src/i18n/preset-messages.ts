@@ -134,6 +134,19 @@ export const presetMessages: Record<SupportedLocale, Record<string, string>> = {
       'Low-cost open-source coding model subscription (from $5/month), supports Messages, Chat, and Responses protocols.',
     'channel.preset.opencode-go.plan.anthropic.description': 'Claude Messages native endpoint',
     'channel.preset.opencode-go.plan.openai-chat.description': 'Common Chat / Responses endpoint',
+
+    // OpenRouter
+    'channel.preset.openrouter.description':
+      "The world's largest model aggregation platform — 300+ models with a single API Key, supports Messages, Chat, and Responses protocols.",
+    'channel.preset.openrouter.plan.anthropic.description': 'Claude Messages native endpoint',
+    'channel.preset.openrouter.plan.openai-chat.description': 'Common Chat / Responses endpoint',
+
+    // ModelScope
+    'channel.preset.modelscope.label': 'ModelScope',
+    'channel.preset.modelscope.description':
+      "Alibaba DAMO Academy's open-source model community, providing free inference API for Qwen, DeepSeek, Llama and more; supports Messages, Chat, and Responses protocols.",
+    'channel.preset.modelscope.plan.anthropic.description': 'Claude Messages native endpoint',
+    'channel.preset.modelscope.plan.openai-chat.description': 'Common Chat / Responses endpoint',
   },
   'zh-CN': {
     // 留空：所有 key 都通过 translateOrFallback 回退到 Go preset 中的原中文。

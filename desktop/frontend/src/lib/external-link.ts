@@ -16,6 +16,8 @@ export const providerConsoleLinks: Record<string, string> = {
   dashscope: 'https://bailian.console.aliyun.com/cn-beijing?tab=model#/api-key',
   'opencode-zen': 'https://opencode.ai/',
   'opencode-go': 'https://opencode.ai/',
+  openrouter: 'https://openrouter.ai/keys',
+  modelscope: 'https://modelscope.cn/my/myaccesstoken',
   openai: 'https://platform.openai.com',
 }
 

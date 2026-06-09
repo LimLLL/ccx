@@ -21,6 +21,8 @@ const (
 	ProviderVolcArk      = "volc-ark"
 	ProviderQianfan      = "qianfan"
 	ProviderOriginRouter = "originrouter"
+	ProviderOpenRouter   = "openrouter"
+	ProviderModelScope   = "modelscope"
 	ProviderOpenCodeZen  = "opencode-zen"
 	ProviderOpenCodeGo   = "opencode-go"
 
@@ -135,6 +137,8 @@ var providerConsoleURLs = map[string]string{
 	ProviderVolcArk:      "https://console.volcengine.com/ark",
 	ProviderQianfan:      "https://console.bce.baidu.com/qianfan/resource/subscribe",
 	ProviderOriginRouter: "https://easytransnote.com/ai/console/#key",
+	ProviderOpenRouter:   "https://openrouter.ai/keys",
+	ProviderModelScope:   "https://modelscope.cn/my/myaccesstoken",
 	ProviderOpenCodeZen:  "https://opencode.ai/",
 	ProviderOpenCodeGo:   "https://opencode.ai/",
 }
@@ -433,6 +437,46 @@ func Presets() []ProviderPreset {
 			DefaultTarget: TargetMessages,
 		},
 		{
+			ID:                  ProviderOpenRouter,
+			Order:               35,
+			Label:               "OpenRouter",
+			Description:         "全球最大模型聚合平台，300+ 模型一个 Key 通吃，原生支持 Messages、Chat、Responses 三种协议。",
+			DirectAgent:         true,
+			NativeMessages:      true,
+			ChatCompatible:      true,
+			ResponsesCompatible: true,
+			Plans: []ProviderPlan{
+				{ID: "anthropic", Label: "Anthropic-compatible", BaseURL: "https://openrouter.ai/api", Description: "Claude Messages 原生入口", Recommended: true},
+				{ID: "openai-chat", Label: "OpenAI-compatible", BaseURL: "https://openrouter.ai/api/v1", Description: "Chat / Responses 通用入口"},
+			},
+			Targets: []ChannelTarget{
+				{Type: TargetMessages, Label: "Messages 原生透传", Description: "Claude Code 直连或 CCX messages 渠道", Recommended: true},
+				{Type: TargetResponses, Label: "Codex Responses", Description: "OpenAI Responses 协议，供 Codex 使用"},
+				{Type: TargetChat, Label: "Chat 渠道透传", Description: "OpenAI Chat 协议，供 Chat 客户端使用"},
+			},
+			DefaultTarget: TargetMessages,
+		},
+		{
+			ID:                  ProviderModelScope,
+			Order:               82,
+			Label:               "ModelScope 魔搭",
+			Description:         "阿里达摩院开源模型社区，提供 Qwen、DeepSeek、Llama 等模型免费推理 API，原生支持 Messages、Chat、Responses 三种协议。",
+			DirectAgent:         true,
+			NativeMessages:      true,
+			ChatCompatible:      true,
+			ResponsesCompatible: true,
+			Plans: []ProviderPlan{
+				{ID: "anthropic", Label: "Anthropic-compatible", BaseURL: "https://api-inference.modelscope.cn", Description: "Claude Messages 原生入口", Recommended: true},
+				{ID: "openai-chat", Label: "OpenAI-compatible", BaseURL: "https://api-inference.modelscope.cn/v1", Description: "Chat / Responses 通用入口"},
+			},
+			Targets: []ChannelTarget{
+				{Type: TargetMessages, Label: "Messages 原生透传", Description: "Claude Code 直连或 CCX messages 渠道", Recommended: true},
+				{Type: TargetChat, Label: "Chat 渠道透传", Description: "OpenAI Chat 协议，供 Chat 客户端使用"},
+				{Type: TargetResponses, Label: "Codex Responses", Description: "OpenAI Responses 协议，供 Codex 使用"},
+			},
+			DefaultTarget: TargetMessages,
+		},
+		{
 			ID:                  ProviderOriginRouter,
 			Order:               200,
 			Label:               "极易云 OriginRouter",
@@ -708,6 +752,13 @@ var channelTargetConfigs = map[string]map[string]channelTargetConfig{
 				"sonnet": "glm-5.1",
 			},
 		},
+		ProviderModelScope: {
+			ModelMapping: map[string]string{
+				"haiku":  "deepseek-ai/DeepSeek-V4-Flash",
+				"sonnet": "ZhipuAI/GLM-5.1",
+				"opus":   "ZhipuAI/GLM-5.1",
+			},
+		},
 	},
 	TargetChat: {
 		ProviderDeepSeek: {
@@ -726,6 +777,10 @@ var channelTargetConfigs = map[string]map[string]channelTargetConfig{
 			VisionFallbackModel: "MiniMax-M2.7",
 		},
 		ProviderRunAPI:      {},
+		ProviderOpenRouter:  {},
+		ProviderModelScope: {
+			NormalizeNonstandardChatRoles: true,
+		},
 		ProviderMiniMax:     {},
 		ProviderDashScope:   {},
 		ProviderOpenCodeZen: {},
@@ -804,6 +859,20 @@ var channelTargetConfigs = map[string]map[string]channelTargetConfig{
 		},
 		ProviderGLM: {
 			ModelMapping: map[string]string{"gpt-5": "glm-5.1", "codex-auto-review": "glm-5.1"},
+		},
+		ProviderOpenRouter: {
+			CodexToolCompat:       boolRef(false),
+			StripCodexClientTools: boolRef(false),
+		},
+		ProviderModelScope: {
+			ModelMapping: map[string]string{
+				"gpt":               "ZhipuAI/GLM-5.1",
+				"mini":              "deepseek-ai/DeepSeek-V4-Flash",
+				"codex-auto-review": "deepseek-ai/DeepSeek-V4-Flash",
+			},
+			CodexToolCompat:               boolRef(false),
+			StripCodexClientTools:         boolRef(false),
+			NormalizeNonstandardChatRoles: true,
 		},
 	},
 }
