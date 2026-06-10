@@ -1,15 +1,55 @@
-## [Unreleased]
-
-### 修复
-
-- **桌面端 Codex 排障忽略 UI 选择的目标模式** - 排障诊断只检查 config.toml / auth.json 文件自洽性，未考虑用户在 UI 上选择的 Codex 模式（快捷/插件），导致选了快捷模式但磁盘仍是插件模式时误报"配置一致"。修复后前端排障会比较 `status.mode`（磁盘实际模式）与 `codexMode`（UI 目标模式），不一致时优先报模式冲突并提示重新应用。涉及 `desktop/frontend/src/composables/useResponsesDiagnostics.ts`、`desktop/frontend/src/i18n/messages.ts`
+## [v2.8.26] - 2026-06-10
 
 ### 新增
 
-- **桌面端 Codex/Responses 分层排障诊断** - 在桌面 Agent 页 Codex 卡片新增分层排障，按顺序检查“Codex 配置一致性 → Responses 渠道可用性 → 最近失败请求”，帮助定位 #156 类“本地网关可达但请求失败”的问题。后端扩展 `AgentConfigStatus`（新增 `authMode`/`configConsistent`/`diagnosticCode`/`diagnosticMessage`），在 `getCodexStatus` 中识别 CCS 等工具导致的 `config.toml` 与 `auth.json` 不一致（缺 key、auth_mode 不匹配、插件模式缺 bearer token、旧式配置残缺、配置污染等）；前端新增 `useResponsesDiagnostics` composable，聚合 Codex 配置层、Responses 渠道层（无渠道/全禁用/无 key/熔断/协议错配）与最近失败日志层（401/403、429、5xx、超时）的诊断结论，并在状态页提供最高优先级问题摘要。第一版仅给出诊断与手动修复建议，不做自动修复。涉及 `desktop/internal/configservice/service.go`、`desktop/frontend/src/composables/useResponsesDiagnostics.ts`、`desktop/frontend/src/components/agent/*`、`desktop/frontend/src/components/status/StatusTab.vue`、`desktop/frontend/src/i18n/messages.ts`、`desktop/frontend/src/types/index.ts`
-
+- **Claude Fable 模型支持** - 新增 Claude Fable 系列模型映射与兼容处理，升级时自动补齐 Fable 模型映射配置
+- **渠道级主动限速与上游 rate limit header 自动追踪 (#190)** - 新增渠道级令牌桶限速、并发控制与 cooldown 机制，自动解析上游 `X-RateLimit-*` / `Retry-After` 响应头并动态调整限速参数，MiMo 默认 RPM=80
 - **历史图片轮次限制与占位符替换** - 新增全局/渠道级历史图片轮次限制配置（`historicalImageTurnLimit`），超过指定轮次的历史对话图片自动替换为 `[Image]` 占位符，避免不必要的 vision 回退模型切换。覆盖 Claude Messages、OpenAI Chat、Responses API、Gemini 四种协议格式。新增环境变量 `HISTORICAL_IMAGE_TURN_LIMIT`、Settings API（`/api/settings/historical-image-turn-limit`）、Web 管理界面全局设置入口与渠道级配置 UI
-- **渠道体验增强与 Messages 渠道级 CCH 开关** - Web/桌面渠道列表新增 15 分钟窗口“缓存写偏高”提醒 badge；桌面端 RunAPI messages 预设默认关闭 `normalizeMetadataUserId`；`stripBillingHeader` 从全局设置下沉为 messages 渠道级开关，默认关闭，并同步补齐 Web/桌面渠道编辑表单与老配置迁移逻辑
+- **渠道体验增强与 Messages 渠道级 CCH 开关** - Web/桌面渠道列表新增 15 分钟窗口”缓存写偏高”提醒 badge；桌面端 RunAPI messages 预设默认关闭 `normalizeMetadataUserId`；`stripBillingHeader` 从全局设置下沉为 messages 渠道级开关，默认关闭，并同步补齐 Web/桌面渠道编辑表单与老配置迁移逻辑
+- **桌面端 OpenRouter 与 ModelScope 渠道预设** - 新增 OpenRouter、ModelScope 渠道中心预设，并将 Kimi Code Plan 合并入 Kimi 预设作为编码计划条目，添加到 Claude/Codex/OpenCode 直连配置列表
+- **桌面端渠道预设扩充** - 新增 RunAPI 赞助商预设、Tencent TokenHub 预设与国内 coding-plan 网关预设，统一 RunAPI 与 Token Plan 文案，优化 RunAPI 渠道预设排序
+- **桌面端管理面板 Fuzzy 开关与熔断器配置** - 管理面板工具栏新增 Fuzzy 模式开关和熔断器配置按钮，熔断器配置预设值、slider 范围与 WebUI 同步对齐
+- **桌面端 Codex/Responses 分层排障诊断** - 在桌面 Agent 页 Codex 卡片新增分层排障，按顺序检查”Codex 配置一致性 → Responses 渠道可用性 → 最近失败请求”，帮助定位 #156 类”本地网关可达但请求失败”的问题。后端扩展 `AgentConfigStatus`（新增 `authMode`/`configConsistent`/`diagnosticCode`/`diagnosticMessage`），在 `getCodexStatus` 中识别 CCS 等工具导致的 `config.toml` 与 `auth.json` 不一致（缺 key、auth_mode 不匹配、插件模式缺 bearer token、旧式配置残缺、配置污染等）；前端新增 `useResponsesDiagnostics` composable，聚合 Codex 配置层、Responses 渠道层（无渠道/全禁用/无 key/熔断/协议错配）与最近失败日志层（401/403、429、5xx、超时）的诊断结论，并在状态页提供最高优先级问题摘要。第一版仅给出诊断与手动修复建议，不做自动修复。涉及 `desktop/internal/configservice/service.go`、`desktop/frontend/src/composables/useResponsesDiagnostics.ts`、`desktop/frontend/src/components/agent/*`、`desktop/frontend/src/components/status/StatusTab.vue`、`desktop/frontend/src/i18n/messages.ts`、`desktop/frontend/src/types/index.ts`
+- **桌面端 dashboard 显示运行态当前渠道** - 桌面端 dashboard 新增运行态当前渠道信息展示
+- **简化前端添加渠道流程** - 优化前端渠道添加交互流程
+
+### 修复
+
+- **桌面端 Codex 排障忽略 UI 选择的目标模式** - 排障诊断只检查 config.toml / auth.json 文件自洽性，未考虑用户在 UI 上选择的 Codex 模式（快捷/插件），导致选了快捷模式但磁盘仍是插件模式时误报”配置一致”。修复后前端排障会比较 `status.mode`（磁盘实际模式）与 `codexMode`（UI 目标模式），不一致时优先报模式冲突并提示重新应用。涉及 `desktop/frontend/src/composables/useResponsesDiagnostics.ts`、`desktop/frontend/src/i18n/messages.ts`
+- **桌面端 Codex 排障按需触发** - Codex 排障诊断改为按需触发，避免不必要的自动诊断开销
+- **桌面端渠道介绍 i18n 对齐** - 补齐渠道介绍缺失的 key 与中文产品描述
+- **桌面端 Fuzzy 模式 API 路径补全** - Fuzzy 模式 API 路径自动补全 `/api` 前缀并改为 watch 驱动加载
+- **桌面端熔断器配置预设值同步** - 同步熔断器配置预设值、slider 范围与 WebUI 一致
+- **桌面端 fetch 网络层错误包装** - 包装 fetch 网络层错误，避免管理面板显示原始 `Failed to fetch` 信息
+- **桌面端切换渠道目标时清除成功提示条** - 修复切换渠道目标时残留上一目标操作结果的问题
+- **桌面端补齐 claudeProviderKeys 缺失键** - 补齐 claudeProviderKeys 缺失的 openrouter/modelscope 键，修复 TS2345 类型错误
+- **桌面端当前渠道显示补上渠道名称** - 修复当前渠道显示缺失渠道名称的问题
+- **桌面端渠道预设描述统一** - 以平台身份重写渠道预设描述，统一 MiniMax M3 旗舰描述文案
+- **桌面端 agent 配置绑定同步** - 同步 agent 配置绑定关系
+- **按 content block index 管理 tool_use 缓冲** - 修复重叠 tool_use 导致 `Content block not found` 错误
+- **preflight 对未知 SSE 事件类型增加内容兜底识别** - Responses preflight 阶段对未知 SSE 事件类型增加内容兜底识别逻辑
+- **识别 messages→responses 桥接下的上游错误** - 修复 messages→responses 桥接场景下上游错误/失败/reasoning 事件未被正确识别的问题
+- **调整熔断器预设超时值** - 均衡档改为 60s/60s/180s
+- **渠道级流式超时预设与全局调校台对齐** - 渠道级流式超时预设值与全局调校台保持一致
+- **补齐渠道调校台参数同步** - 修复渠道级调校台参数未与全局配置同步的问题
+- **优化 RunAPI 渠道预设与排序** - 优化 RunAPI 渠道预设配置与列表排序
+- **tune 工具调用空闲处理** - 调整流式工具调用空闲超时参数
+- **加固本地 compact prompt** - 加固 Responses compact 本地提示词
+
+### 重构
+
+- **合并历史图片轮次限制到熔断器对话框** - 将历史图片轮次限制配置合并到熔断器对话框中，减少工具栏按钮数量
+- **从 EnvTab 移除熔断器配置卡片** - 从 EnvTab 移除熔断器配置卡片，统一由管理面板弹窗管理
+- **熔断器设置更名为调校台 Tuning Bench** - 将熔断器设置相关 UI 文案统一更名为”调校台 Tuning Bench”
+
+### 文档
+
+- **上游评估 TODO 更新** - 添加上游评估待办事项，记录 #190 新特性条目与上游协议变更
+- **upstream-check TODO 格式对齐** - 对齐上游检查脚本 TODO 分组标题层级与任务格式
+
+### 其他
+
+- **将上游检查脚本迁入技能目录** - 将上游版本检查脚本从 tools/ 迁入技能目录，优化技能目录结构
 
 ## [v2.8.25] - 2026-06-07
 
