@@ -459,6 +459,8 @@ func Presets() []ProviderPreset {
 			DefaultTarget: TargetMessages,
 		},
 		{
+			// 极易云仅在渠道中心可用，刻意不纳入 Agent（Claude/Codex/OpenCode）直连下拉。
+			// 即便三个协议标志均为 true，也不要将其加入 desktop/internal/configservice 的直连 provider 列表。
 			ID:                  ProviderOriginRouter,
 			Order:               200,
 			Label:               "极易云 OriginRouter",
