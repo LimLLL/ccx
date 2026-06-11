@@ -62,13 +62,14 @@ desktop-build: build
 	@echo "$(GREEN)构建桌面外壳...$(NC)"
 	@cd desktop && wails3 task package
 
-embed-frontend:
-	@echo "$(GREEN)📦 构建前端...$(NC)"
-	@cd frontend && bun run build
-	@echo "$(GREEN)📋 嵌入前端到 Go 后端...$(NC)"
-	@rm -rf backend-go/frontend/dist
-	@mkdir -p backend-go/frontend/dist
-	@cp -r frontend/dist/* backend-go/frontend/dist/
+FRONTEND_SENTINEL=backend-go/frontend/dist/.build-sentinel
+FRONTEND_SOURCES=$(shell find frontend/src frontend/public frontend/index.html frontend/vite.config.ts frontend/tsconfig.json frontend/tsconfig.app.json -type f 2>/dev/null)
+
+embed-frontend: $(FRONTEND_SENTINEL)
+
+$(FRONTEND_SENTINEL): $(FRONTEND_SOURCES)
+	@bash scripts/embed-frontend.sh
+	@touch $(FRONTEND_SENTINEL)
 
 clean:
 	@cd backend-go && $(MAKE) clean
