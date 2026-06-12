@@ -1156,111 +1156,67 @@
             </v-col>
 
             <v-col cols="12">
-              <v-card variant="outlined" class="timeout-config-card">
-                <v-card-text class="pa-4">
-                  <div class="timeout-grid">
-                    <!-- 首字等待超时 -->
-                    <div class="timeout-item">
-                      <div class="d-flex align-center justify-space-between mb-3">
-                        <div class="d-flex align-center ga-2">
-                          <v-icon size="18" color="primary">mdi-timer-sand</v-icon>
-                          <span class="timeout-label">{{ t('addChannel.streamFirstContentTimeoutLabel') }}</span>
-                        </div>
-                        <v-switch
-                          v-model="form.streamFirstContentTimeoutEnabled"
-                          color="primary"
-                          density="compact"
-                          hide-details
-                          inset
-                        />
-                      </div>
-                      <div :class="{ 'timeout-disabled': !form.streamFirstContentTimeoutEnabled }">
-                        <div class="d-flex justify-space-between align-center mb-2">
-                          <span class="text-caption text-medium-emphasis">{{ (form.streamFirstContentTimeoutMs / 1000) }}s</span>
-                          <span class="text-caption text-medium-emphasis">5s — 300s</span>
-                        </div>
-                        <input
-                          v-model.number="form.streamFirstContentTimeoutMs"
-                          type="range"
-                          min="5000"
-                          max="300000"
-                          step="1000"
-                          class="timeout-slider"
-                          :disabled="!form.streamFirstContentTimeoutEnabled"
-                        />
-                      </div>
-                    </div>
-
-                    <!-- 首字后断流超时 -->
-                    <div class="timeout-item">
-                      <div class="d-flex align-center justify-space-between mb-3">
-                        <div class="d-flex align-center ga-2">
-                          <v-icon size="18" color="primary">mdi-timer-outline</v-icon>
-                          <span class="timeout-label">{{ t('addChannel.streamInactivityTimeoutLabel') }}</span>
-                        </div>
-                        <v-switch
-                          v-model="form.streamInactivityTimeoutEnabled"
-                          color="primary"
-                          density="compact"
-                          hide-details
-                          inset
-                        />
-                      </div>
-                      <div :class="{ 'timeout-disabled': !form.streamInactivityTimeoutEnabled }">
-                        <div class="d-flex justify-space-between align-center mb-2">
-                          <span class="text-caption text-medium-emphasis">{{ (form.streamInactivityTimeoutMs / 1000) }}s</span>
-                          <span class="text-caption text-medium-emphasis">1s — 180s</span>
-                        </div>
-                        <input
-                          v-model.number="form.streamInactivityTimeoutMs"
-                          type="range"
-                          min="1000"
-                          max="180000"
-                          step="1000"
-                          class="timeout-slider"
-                          :disabled="!form.streamInactivityTimeoutEnabled"
-                        />
-                      </div>
-                    </div>
-
-                    <!-- 工具调用空闲超时 -->
-                    <div class="timeout-item">
-                      <div class="d-flex align-center justify-space-between mb-3">
-                        <div class="d-flex align-center ga-2">
-                          <v-icon size="18" color="primary">mdi-tools</v-icon>
-                          <span class="timeout-label">{{ t('addChannel.streamToolCallIdleTimeoutLabel') }}</span>
-                        </div>
-                        <v-switch
-                          v-model="form.streamToolCallIdleTimeoutEnabled"
-                          color="primary"
-                          density="compact"
-                          hide-details
-                          inset
-                        />
-                      </div>
-                      <div :class="{ 'timeout-disabled': !form.streamToolCallIdleTimeoutEnabled }">
-                        <div class="d-flex justify-space-between align-center mb-2">
-                          <span class="text-caption text-medium-emphasis">{{ (form.streamToolCallIdleTimeoutMs / 1000) }}s</span>
-                          <span class="text-caption text-medium-emphasis">30s — 300s</span>
-                        </div>
-                        <input
-                          v-model.number="form.streamToolCallIdleTimeoutMs"
-                          type="range"
-                          min="30000"
-                          max="300000"
-                          step="1000"
-                          class="timeout-slider"
-                          :disabled="!form.streamToolCallIdleTimeoutEnabled"
-                        />
-                      </div>
-                    </div>
+              <div class="timeout-control-grid">
+                <!-- 首字等待超时 -->
+                <div class="timeout-control" :class="{ 'timeout-control--disabled': !form.streamFirstContentTimeoutEnabled }">
+                  <div class="timeout-control-header">
+                    <span class="timeout-label">{{ t('addChannel.streamFirstContentTimeoutLabel') }}</span>
+                    <span class="timeout-value">{{ (form.streamFirstContentTimeoutMs / 1000) }}s</span>
                   </div>
-                  <div class="text-caption text-medium-emphasis mt-3 px-1">
-                    <v-icon size="14" class="mr-1">mdi-information-outline</v-icon>
-                    {{ t('addChannel.streamTimeoutOverrideHint') }}
+                  <input
+                    v-model.number="form.streamFirstContentTimeoutMs"
+                    type="range"
+                    min="5000"
+                    max="300000"
+                    step="1000"
+                    class="timeout-slider"
+                    :disabled="!form.streamFirstContentTimeoutEnabled"
+                  />
+                  <div class="timeout-range">
+                    <span>5s</span><span>300s</span>
                   </div>
-                </v-card-text>
-              </v-card>
+                </div>
+
+                <!-- 首字后断流超时 -->
+                <div class="timeout-control" :class="{ 'timeout-control--disabled': !form.streamInactivityTimeoutEnabled }">
+                  <div class="timeout-control-header">
+                    <span class="timeout-label">{{ t('addChannel.streamInactivityTimeoutLabel') }}</span>
+                    <span class="timeout-value">{{ (form.streamInactivityTimeoutMs / 1000) }}s</span>
+                  </div>
+                  <input
+                    v-model.number="form.streamInactivityTimeoutMs"
+                    type="range"
+                    min="1000"
+                    max="180000"
+                    step="1000"
+                    class="timeout-slider"
+                    :disabled="!form.streamInactivityTimeoutEnabled"
+                  />
+                  <div class="timeout-range">
+                    <span>1s</span><span>180s</span>
+                  </div>
+                </div>
+
+                <!-- 工具调用空闲超时 -->
+                <div class="timeout-control" :class="{ 'timeout-control--disabled': !form.streamToolCallIdleTimeoutEnabled }">
+                  <div class="timeout-control-header">
+                    <span class="timeout-label">{{ t('addChannel.streamToolCallIdleTimeoutLabel') }}</span>
+                    <span class="timeout-value">{{ (form.streamToolCallIdleTimeoutMs / 1000) }}s</span>
+                  </div>
+                  <input
+                    v-model.number="form.streamToolCallIdleTimeoutMs"
+                    type="range"
+                    min="30000"
+                    max="300000"
+                    step="1000"
+                    class="timeout-slider"
+                    :disabled="!form.streamToolCallIdleTimeoutEnabled"
+                  />
+                  <div class="timeout-range">
+                    <span>30s</span><span>300s</span>
+                  </div>
+                </div>
+              </div>
             </v-col>
 
             <!-- 主动限速 -->
@@ -3534,82 +3490,154 @@ onUnmounted(() => {
   background-color: rgba(52, 211, 153, 0.92) !important;
 }
 
-/* 超时配置卡片 */
-.timeout-config-card {
-  border: 1px solid rgba(var(--v-theme-primary), 0.12);
-}
-
-.timeout-grid {
+/* 超时配置 - Neo-Brutalism 风格（沿用调校台设计） */
+.timeout-control-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-bottom: 16px;
+  border: 2px solid rgb(var(--v-theme-on-surface));
+  background: rgb(var(--v-theme-surface));
 }
 
-.timeout-item {
-  padding: 12px;
-  border-radius: 8px;
-  background: rgba(var(--v-theme-surface-variant), 0.3);
-  transition: background 0.2s ease;
+.v-theme--dark .timeout-control-grid {
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
-.timeout-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.timeout-slider {
-  width: 100%;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(var(--v-theme-on-surface), 0.12);
-  outline: none;
-  appearance: none;
-  cursor: pointer;
+.timeout-control {
+  padding: 12px 14px;
+  position: relative;
   transition: opacity 0.2s ease;
 }
 
-.timeout-slider::-webkit-slider-thumb {
+.timeout-control--disabled {
+  opacity: 0.4;
+}
+
+.timeout-control:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: rgb(var(--v-theme-on-surface));
+  opacity: 0.18;
+}
+
+.v-theme--dark .timeout-control:not(:last-child)::after {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.timeout-control-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 6px;
+}
+
+.timeout-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface) / 70%);
+  text-transform: uppercase;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+.timeout-value {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgb(var(--v-theme-primary));
+  padding: 2px 8px;
+  border: 2px solid rgb(var(--v-theme-on-surface));
+  background: rgb(var(--v-theme-surface));
+  flex-shrink: 0;
+  min-width: 40px;
+  text-align: center;
+}
+
+.v-theme--dark .timeout-value {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.timeout-slider {
+  -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  width: 100%;
+  height: 8px;
+  border-radius: 0;
+  border: 2px solid rgb(var(--v-theme-on-surface) / 20%);
+  background: rgb(var(--v-theme-on-surface) / 8%);
+  outline: none;
+  cursor: pointer;
+}
+
+.timeout-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 0;
   background: rgb(var(--v-theme-primary));
   cursor: pointer;
-  transition: transform 0.2s ease;
+  border: 2px solid rgb(var(--v-theme-on-surface));
+  box-shadow: 2px 2px 0 0 rgb(var(--v-theme-on-surface));
+  transition: box-shadow 0.1s ease;
 }
 
 .timeout-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 0 rgb(var(--v-theme-on-surface));
 }
 
 .timeout-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 0;
   background: rgb(var(--v-theme-primary));
-  border: none;
   cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.timeout-slider::-moz-range-thumb:hover {
-  transform: scale(1.2);
+  border: 2px solid rgb(var(--v-theme-on-surface));
+  box-shadow: 2px 2px 0 0 rgb(var(--v-theme-on-surface));
 }
 
 .timeout-slider:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.timeout-disabled {
-  opacity: 0.5;
-  pointer-events: none;
+.v-theme--dark .timeout-slider {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.v-theme--dark .timeout-slider::-webkit-slider-thumb {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 2px 2px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+.v-theme--dark .timeout-slider::-moz-range-thumb {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 2px 2px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+.timeout-range {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: rgb(var(--v-theme-on-surface) / 50%);
+  margin-top: 4px;
 }
 
 @media (max-width: 768px) {
-  .timeout-grid {
+  .timeout-control-grid {
     grid-template-columns: 1fr;
+  }
+
+  .timeout-control:not(:last-child)::after {
+    display: none;
   }
 }
 
