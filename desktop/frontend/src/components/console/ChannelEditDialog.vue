@@ -329,13 +329,19 @@ function populateFromChannel(ch: Channel) {
 }
 
 watch(() => props.channel, (ch) => {
+  console.log('[watch channel] 渠道变化', { 
+    hasChannel: !!ch, 
+    hasMappings: ch?.modelMapping ? Object.keys(ch.modelMapping).length : 0 
+  })
   resetForm()
   if (ch) {
     populateFromChannel(ch)
     // 如果有模型映射配置，主动触发一次模型列表获取
     // 使用 nextTick 确保表单数据已填充完成
     if (ch.modelMapping && Object.keys(ch.modelMapping).length > 0) {
+      console.log('[watch channel] 检测到模型映射，准备预加载')
       nextTick(() => {
+        console.log('[watch channel] nextTick 后触发预加载')
         void fetchTargetModels()
       })
     }
@@ -1024,8 +1030,18 @@ const expectedRequestUrls = computed(() => {
 })
 
 async function fetchTargetModels() {
-  if (!props.channel) return
+  console.log('[fetchTargetModels] 开始执行', { 
+    hasChannel: !!props.channel, 
+    baseUrl: form.baseUrl, 
+    apiKeysCount: getSubmitApiKeys().length 
+  })
+  
+  if (!props.channel) {
+    console.log('[fetchTargetModels] 中断：无渠道')
+    return
+  }
   if (!form.baseUrl.trim() || getSubmitApiKeys().length === 0) {
+    console.log('[fetchTargetModels] 中断：缺少配置')
     fetchedModelsError.value = tf('console.form.modelFetchNeedsConfig', '需要 Base URL 和 API Key 才能获取模型列表')
     return
   }
@@ -1033,6 +1049,7 @@ async function fetchTargetModels() {
   fetchingModels.value = true
   fetchedModelsError.value = ''
   try {
+    console.log('[fetchTargetModels] 开始请求 API')
     // 直接调用 API，不依赖于 persistCurrentDraft（避免表单验证失败导致无法获取模型）
     const typeApi = getChannelTypeApi(props.channelType as ManagedChannelType)
     const keys = getSubmitApiKeys()
@@ -1045,7 +1062,9 @@ async function fetchTargetModels() {
     // 上游原始响应：Claude/OpenAI 返回 { data: [...] }，部分返回裸数组
     const list: any[] = Array.isArray(resp) ? resp : (resp?.data ?? [])
     targetModelOptions.value = [...new Set<string>(list.map((m: any) => m.id || m.name || String(m)).filter(Boolean))].sort()
+    console.log('[fetchTargetModels] 成功获取模型', targetModelOptions.value.length)
   } catch (e) {
+    console.error('[fetchTargetModels] 请求失败', e)
     fetchedModelsError.value = e instanceof Error ? e.message : String(e)
   } finally {
     fetchingModels.value = false
