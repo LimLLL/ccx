@@ -66,11 +66,8 @@ func (l *ChannelLimiter) applyConfig(cfg Config) {
 		if cfg.Burst > 0 {
 			l.burst = float64(cfg.Burst)
 		} else {
-			// 默认 burst = RPM（即允许 1 秒的突发量，至少 1）
-			l.burst = float64(cfg.RPM)
-			if l.burst < 1 {
-				l.burst = 1
-			}
+			// 默认 burst = 1（强制平滑限速，避免瞬间突发导致上游 429）
+			l.burst = 1
 		}
 		// 初始填满
 		if l.tokens > l.burst {

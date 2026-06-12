@@ -312,6 +312,9 @@ func TryUpstreamWithAllKeys(
 				resp.Body.Close()
 				respBodyBytes = utils.DecompressGzipIfNeeded(resp, respBodyBytes)
 
+				// 记录错误响应头（用于诊断限流 header）
+				LogUpstreamResponseHeaders(c, resp, envCfg, apiType)
+
 				shouldFailover, isQuotaRelated := ShouldRetryWithNextKeyWithLogTag(resp.StatusCode, respBodyBytes, cfgManager.GetFuzzyModeEnabled(), apiType, RequestLogTag(c))
 
 				// 检查是否应永久拉黑该 Key（认证/权限/余额错误）
