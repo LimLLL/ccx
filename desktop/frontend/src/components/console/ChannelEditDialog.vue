@@ -1518,7 +1518,7 @@ void fromSelectValue
               {{ tf('common.cancel', '取消') }}
               <span class="ml-1.5 hidden sm:inline-flex h-4 select-none items-center gap-1 rounded border bg-transparent px-1.5 font-mono text-[9px] font-medium text-muted-foreground/80">Esc</span>
             </Button>
-            <Button type="button" :disabled="!isValid || saving" @click="handleSubmit">
+            <Button type="button" class="hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]" :disabled="!isValid || saving" @click="handleSubmit">
               <Loader2 v-if="saving" class="mr-2 h-4 w-4 animate-spin" />
               {{ isEditMode
                 ? tf('console.form.save', '保存')
