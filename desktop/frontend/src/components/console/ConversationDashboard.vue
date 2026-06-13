@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { MessageSquare, Search } from 'lucide-vue-next'
+import { useAdminApi } from '@/composables/useAdminApi'
 import { useConversations } from '@/composables/useConversations'
 import { useLanguage } from '@/composables/useLanguage'
 import { useStatus } from '@/composables/useStatus'
 import ConversationCard from './ConversationCard.vue'
 import type { ChannelSequenceEntry } from '@/services/admin-api'
 
+const api = useAdminApi()
 const { status } = useStatus()
 const { tf } = useLanguage()
 const {

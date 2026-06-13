@@ -17,6 +17,11 @@ import { getChannelTypeApi, type ManagedChannelType } from '@/utils/channel-type
 import { buildExpectedRequestUrls } from '@/utils/expected-request-urls'
 import { parseQuickInput } from '@/utils/quick-input-parser'
 import type { Channel, DisabledKeyInfo } from '@/services/admin-api'
+import BasicConfigPanel from './channel-edit/BasicConfigPanel.vue'
+import AuthPanel from './channel-edit/AuthPanel.vue'
+import ModelMappingPanel from './channel-edit/ModelMappingPanel.vue'
+import AdvancedPanel from './channel-edit/AdvancedPanel.vue'
+import CustomHeadersPanel from './channel-edit/CustomHeadersPanel.vue'
 
 interface Props {
   channel?: Channel | null
@@ -61,6 +66,7 @@ interface HeaderRow {
 let rowId = 0
 const activeSection = ref('basic')
 const sectionRefs = ref<Record<string, HTMLElement | null>>({})
+const dialogRef = ref<HTMLElement | null>(null)
 let scrollRoot: Element | null = null
 let scrollHandler: (() => void) | null = null
 
@@ -90,18 +96,22 @@ function updateActiveSectionFromScroll() {
   const rootTop = scrollRoot.getBoundingClientRect().top
   let current = sections[0]?.id || 'basic'
 
+  // 遍历所有 section，找到最后一个进入视口顶部的 section
   for (const s of sections) {
     const el = sectionRefs.value[s.id]
     if (!el) continue
     const top = el.getBoundingClientRect().top - rootTop
-    if (top <= 120) {
+    // 使用较小的阈值（60px），确保更灵敏的切换
+    if (top <= 60) {
       current = s.id
     } else {
       break
     }
   }
 
-  activeSection.value = current
+  if (activeSection.value !== current) {
+    activeSection.value = current
+  }
 }
 const modelMappingRows = ref<ModelMappingRow[]>([])
 const newModelMapping = reactive<ModelMappingRow>({ id: 0, source: '', target: '', reasoning: '', noVision: false })
@@ -587,11 +597,21 @@ onMounted(() => {
 
   // 按滚动位置同步左侧导航高亮；长 section 内滚动也需要实时更新
   nextTick(() => {
-    scrollRoot = document.querySelector('[data-slot="scroll-area-viewport"]')
-    if (!scrollRoot) return
-    scrollHandler = () => updateActiveSectionFromScroll()
-    scrollRoot.addEventListener('scroll', scrollHandler, { passive: true })
-    updateActiveSectionFromScroll()
+    // 等待 DOM 完全渲染后再查询（reka-ui 可能需要更多时间）
+    setTimeout(() => {
+      // 从对话框内部查找滚动容器，避免选中其他对话框的容器
+      scrollRoot = dialogRef.value?.querySelector('[data-slot="scroll-area-viewport"]') || null
+      if (!scrollRoot) {
+        console.warn('[ChannelEditDialog] 未找到滚动容器')
+        console.log('[ChannelEditDialog] dialogRef:', dialogRef.value)
+        console.log('[ChannelEditDialog] 全局查询结果:', document.querySelectorAll('[data-slot="scroll-area-viewport"]').length)
+        return
+      }
+      console.log('[ChannelEditDialog] 滚动容器已绑定')
+      scrollHandler = () => updateActiveSectionFromScroll()
+      scrollRoot.addEventListener('scroll', scrollHandler, { passive: true })
+      updateActiveSectionFromScroll()
+    }, 100)
   })
 })
 
@@ -1312,7 +1332,7 @@ void fromSelectValue
       >
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="emit('close')" />
 
-        <div class="relative z-10 flex max-h-[90vh] w-[94vw] max-w-6xl flex-col overflow-hidden rounded-xl border border-border/80 bg-background shadow-2xl backdrop-blur-md">
+        <div ref="dialogRef" class="relative z-10 flex max-h-[90vh] w-[94vw] max-w-6xl flex-col overflow-hidden rounded-xl border border-border/80 bg-background shadow-2xl backdrop-blur-md">
           <!-- 标题栏 -->
           <div class="flex shrink-0 items-start justify-between gap-3 border-b border-border/60 bg-card/50 p-5 backdrop-blur-sm">
             <div class="min-w-0 space-y-1">
