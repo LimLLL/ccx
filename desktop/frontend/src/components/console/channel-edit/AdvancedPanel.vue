@@ -139,12 +139,12 @@ function fromSelectValue(value: string): string {
     </section>
 
     <!-- 高级扩展选项 -->
-    <section class="space-y-6 rounded-xl border border-border/60 bg-card/40 p-5 shadow-xs">
+    <section class="space-y-6 rounded-xl border border-border/60 bg-card/40 p-4 shadow-xs">
       <h4 class="text-xs font-bold uppercase tracking-wider text-primary border-b border-border/40 pb-2">
         {{ tf('console.form.advancedOptions', '高级扩展选项') }}
       </h4>
 
-      <div class="space-y-5">
+      <div class="space-y-2.5">
         <!-- 协议规范化 -->
         <div class="p-4 rounded-xl border border-border/50 bg-background/40 space-y-2.5">
         <div class="text-[10px] font-bold uppercase tracking-wider text-primary/80 border-b border-border/30 pb-1">
