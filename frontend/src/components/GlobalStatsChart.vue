@@ -461,7 +461,7 @@ const buildTrafficTooltip = ({ dataPointIndex }: any): string => {
       html += `<div style="display: flex; align-items: center; margin: 4px 0;">`
       html += `<span style="width: 10px; height: 10px; border-radius: 50%; background: ${color}; margin-right: 6px;"></span>`
       html += `<span style="flex: 1;">${escapeHtml(model.name)}</span>`
-      html += `<span style="margin-left: 12px; font-weight: 500;">${mdp.requestCount}</span>`
+      html += `<span style="margin-left: 12px; font-weight: 500;">${mdp.requestCount} ${t('chart.requestUnit')}</span>`
       if (hasModelFailure) {
         html += `<span style="margin-left: 6px; color: #ef4444; font-size: 12px;">(${mdp.failureCount} ${t('chart.issueCount')}, ${failRate}%)</span>`
       }
@@ -481,7 +481,7 @@ const buildTrafficTooltip = ({ dataPointIndex }: any): string => {
     html += `<div style="display: flex; align-items: center; margin: 4px 0;">`
     html += `<span style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; margin-right: 6px;"></span>`
     html += `<span style="flex: 1;">${t('chart.totalRequests')}</span>`
-    html += `<span style="margin-left: 12px; font-weight: 500;">${dp.requestCount}</span>`
+    html += `<span style="margin-left: 12px; font-weight: 500;">${dp.requestCount} ${t('chart.requestUnit')}</span>`
     html += `</div>`
     if (hasFailure) {
       html += `<div style="color: #ef4444; font-size: 12px; margin-top: 4px;">${dp.failureCount} ${t('chart.issueCount')} (${failureRate}%)</div>`

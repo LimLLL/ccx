@@ -701,7 +701,7 @@ const buildTrafficTooltip = ({ seriesIndex, dataPointIndex, w }: any): string =>
     html += `<div style="display: flex; align-items: center; margin: 4px 0;">`
     html += `<span style="width: 10px; height: 10px; border-radius: 50%; background: ${stat.color}; margin-right: 6px;"></span>`
     html += `<span style="flex: 1;">${stat.keyMask}</span>`
-    html += `<span style="margin-left: 12px; font-weight: 500;">${stat.total}</span>`
+    html += `<span style="margin-left: 12px; font-weight: 500;">${stat.total} ${t('chart.requestUnit')}</span>`
     if (hasKeyFailure) {
       html += `<span style="margin-left: 6px; color: #ef4444; font-size: 12px;">(${stat.failure} ${t('chart.issueCount')}, ${failureRate}%)</span>`
     }
