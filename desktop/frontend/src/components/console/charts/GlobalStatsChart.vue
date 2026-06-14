@@ -329,7 +329,8 @@ const timePointFailureRates = computed(() => {
     }))
 })
 
-const failureColor = computed(() => isDark.value ? 'rgba(239, 68, 68, 0.7)' : 'rgba(239, 68, 68, 0.85)')
+// failureColor 已不直接用于 annotation fillColor（改为在 annotation 内动态构建 rgba）
+const _failureBaseColor = computed(() => isDark.value ? [239, 68, 68] : [239, 68, 68])
 
 // Calculate opacity based on failure rate
 const getFailureOpacity = (failureRate: number): number => {
@@ -363,8 +364,7 @@ const failureAnnotations = computed(() => {
       annotations.push({
         x: point.timestamp - pointInterval / 2,
         x2: point.timestamp + pointInterval / 2,
-        fillColor: failureColor.value,
-        opacity: getFailureOpacity(point.failureRate),
+        fillColor: `rgba(239, 68, 68, ${getFailureOpacity(point.failureRate)})`,
         label: { text: '' }
       })
     }

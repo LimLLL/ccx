@@ -356,8 +356,7 @@ const failureAnnotations = computed(() => {
       annotations.push({
         x: point.timestamp - interval / 2,
         x2: point.timestamp + interval / 2,
-        fillColor: '#ef4444',
-        opacity: getFailureOpacity(point.failureRate),
+        fillColor: `rgba(239, 68, 68, ${getFailureOpacity(point.failureRate)})`,
         label: {
           text: ''
         }
