@@ -327,10 +327,12 @@ const timePointFailureRates = computed(() => {
     }))
 })
 
+const failureColor = computed(() => isDark.value ? 'rgba(239, 68, 68, 0.7)' : '#ef4444')
+
 // Calculate opacity based on failure rate
 const getFailureOpacity = (failureRate: number): number => {
-  const minOpacity = 0.08
-  const maxOpacity = 0.65
+  const minOpacity = 0.06
+  const maxOpacity = 0.45
   const normalizedRate = Math.min((failureRate - FAILURE_RATE_THRESHOLD) / (1 - FAILURE_RATE_THRESHOLD), 1)
   return minOpacity + normalizedRate * (maxOpacity - minOpacity)
 }
@@ -359,7 +361,7 @@ const failureAnnotations = computed(() => {
       annotations.push({
         x: point.timestamp - pointInterval / 2,
         x2: point.timestamp + pointInterval / 2,
-        fillColor: '#ef4444',
+        fillColor: failureColor.value,
         opacity: getFailureOpacity(point.failureRate),
         label: { text: '' }
       })
