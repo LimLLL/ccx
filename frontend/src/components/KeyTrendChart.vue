@@ -401,7 +401,8 @@ const chartOptions = computed<ApexOptions>(() => {
           formatter: (val: number) => formatAxisValue(val, mode),
           style: { fontSize: '11px' }
         },
-        min: 0
+        min: 0,
+        forceNiceScale: true
       },
       // Right Y-axis (Output/Write)
       {
@@ -412,7 +413,8 @@ const chartOptions = computed<ApexOptions>(() => {
           formatter: (val: number) => formatAxisValue(val, mode),
           style: { fontSize: '11px' }
         },
-        min: 0
+        min: 0,
+        forceNiceScale: true
       }
     ]
 
@@ -421,12 +423,14 @@ const chartOptions = computed<ApexOptions>(() => {
       yaxisConfig.push({
         seriesName: anchorInName,
         show: false,
-        min: 0
+        min: 0,
+        forceNiceScale: true
       })
       yaxisConfig.push({
         seriesName: anchorOutName,
         show: false,
-        min: 0
+        min: 0,
+        forceNiceScale: true
       })
     }
   } else {
@@ -435,7 +439,8 @@ const chartOptions = computed<ApexOptions>(() => {
         formatter: (val: number) => formatAxisValue(val, mode),
         style: { fontSize: '11px' }
       },
-      min: 0
+      min: 0,
+      forceNiceScale: true
     }
   }
 

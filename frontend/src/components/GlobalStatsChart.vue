@@ -379,7 +379,8 @@ const chartOptions = computed<ApexOptions>(() => {
             formatter: (val: number) => formatNumber(val),
             style: { fontSize: '11px' }
           },
-          min: 0
+          min: 0,
+          forceNiceScale: true
         },
         {
           seriesName: t('chart.outputTokens'),
@@ -388,13 +389,14 @@ const chartOptions = computed<ApexOptions>(() => {
             formatter: (val: number) => formatNumber(val),
             style: { fontSize: '11px' }
           },
-          min: 0
+          min: 0,
+          forceNiceScale: true
         }
       ]
       if (hasCacheData.value) {
         axes.push(
-          { seriesName: 'Cache Read', show: false, min: 0 },
-          { seriesName: 'Cache Write', show: false, min: 0 }
+          { seriesName: 'Cache Read', show: false, min: 0, forceNiceScale: true },
+          { seriesName: 'Cache Write', show: false, min: 0, forceNiceScale: true }
         )
       }
       return axes
@@ -403,7 +405,8 @@ const chartOptions = computed<ApexOptions>(() => {
         formatter: (val: number) => Math.round(val).toString(),
         style: { fontSize: '11px' }
       },
-      min: 0
+      min: 0,
+      forceNiceScale: true
     },
     tooltip: {
       x: {

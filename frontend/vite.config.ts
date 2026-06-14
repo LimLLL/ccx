@@ -29,6 +29,11 @@ export default defineConfig(({ mode }) => {
         '@': resolve(__dirname, 'src')
       }
     },
+    optimizeDeps: {
+      // vue-i18n 11.x 与 Vite 8 的 esbuild 预构建不兼容，
+      // 预构建会丢失 init_runtime_dom_esm_bundler / init_shared_esm_bundler 的 import
+      exclude: ['vue-i18n'],
+    },
     define: {
       __APP_UI_LANGUAGE__: JSON.stringify(uiLanguage),
       __VUE_I18N_FULL_INSTALL__: false,
