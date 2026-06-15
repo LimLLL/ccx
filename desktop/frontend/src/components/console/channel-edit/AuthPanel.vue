@@ -52,7 +52,7 @@ const emit = defineEmits<{
   'handleDisabledKeyRestore': [key: string]
 }>()
 
-const { tf } = useLanguage()
+const { t, tf } = useLanguage()
 
 function findDuplicateKeyIndex(key: string): number {
   return props.existingApiKeys.indexOf(key)
@@ -63,7 +63,7 @@ function getKeyStatus(key: string) {
 }
 
 function formatModelsCount(statusCode: string | number, count: number) {
-  return tf('addChannel.modelsCount', 'models {statusCode} ({count})', {
+  return t('addChannel.modelsCount', {
     statusCode: String(statusCode),
     count: String(count),
   })
@@ -112,7 +112,7 @@ const visibleDisabledKeys = computed(() => {
             v-if="getKeyStatus(key)?.loading"
             class="rounded bg-sky-500/10 px-1.5 py-0.5 text-[9px] font-medium text-sky-600"
           >
-            {{ tf('addChannel.checking', '检测中...') }}
+            {{ t('addChannel.checking') }}
           </span>
           <span
             v-else-if="getKeyStatus(key)?.success"
@@ -123,8 +123,9 @@ const visibleDisabledKeys = computed(() => {
           <span
             v-else-if="getKeyStatus(key)?.error"
             class="rounded bg-destructive/10 px-1.5 py-0.5 text-[9px] font-medium text-destructive"
+            :title="getKeyStatus(key)?.error"
           >
-            {{ getKeyStatus(key)?.statusCode || 'ERR' }}
+            models {{ getKeyStatus(key)?.statusCode || 'ERR' }}
           </span>
           <span
             v-if="findDuplicateKeyIndex(key) !== index && existingApiKeys.indexOf(key) !== index"

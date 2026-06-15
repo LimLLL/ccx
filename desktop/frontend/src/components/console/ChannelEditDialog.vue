@@ -173,11 +173,14 @@ function showTargetDropdown(inputId: string, currentValue: string) {
 }
 
 function hideTargetDropdown() {
-  // 不要立即隐藏，等待可能的点击事件
-  setTimeout(() => {
-    showTargetSuggestions.value = false
-    activeTargetInputId.value = null
-  }, 300)
+  showTargetSuggestions.value = false
+  activeTargetInputId.value = null
+}
+
+function handlePointerDown(e: PointerEvent) {
+  const target = e.target as Element | null
+  if (target?.closest('[data-target-model-picker]')) return
+  hideTargetDropdown()
 }
 
 function selectTargetModel(inputId: string, model: string) {
@@ -624,6 +627,7 @@ const handleGlobalKeydown = (e: KeyboardEvent) => {
 // 组件挂载即注册快捷键（新建和编辑模式都需要）
 onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown)
+  window.addEventListener('pointerdown', handlePointerDown)
 
   // 按滚动位置同步左侧导航高亮；长 section 内滚动也需要实时更新
   // 使用多次 nextTick + setTimeout 确保 Teleport + reka-ui 完全渲染
@@ -656,6 +660,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
+  window.removeEventListener('pointerdown', handlePointerDown)
   if (scrollRoot && scrollHandler) {
     scrollRoot.removeEventListener('scroll', scrollHandler)
   }
@@ -1228,6 +1233,10 @@ async function fetchTargetModels() {
     return
   }
 
+  const keys = getSubmitApiKeys()
+  const uncheckedKeys = keys.filter(key => !keyModelsStatus.value.has(key))
+  if (uncheckedKeys.length === 0) return
+
   fetchingModels.value = true
   fetchedModelsError.value = ''
   try {
@@ -1251,9 +1260,8 @@ async function fetchTargetModels() {
 
     const typeApi = getChannelTypeApi(modelsApiType)
     const channelId = props.channel.index
-    const keys = getSubmitApiKeys()
     const customHeaders = getHeadersAsObject()
-    const results = await Promise.all(keys.map(async (key) => {
+    const results = await Promise.all(uncheckedKeys.map(async (key) => {
       keyModelsStatus.value.set(key, { loading: true, success: false })
       try {
         const resp = await typeApi.getChannelModels(channelId, {
@@ -1281,14 +1289,19 @@ async function fetchTargetModels() {
         return []
       }
     }))
-    targetModelOptions.value = [...new Set<string>(
-      results
-        .flat()
-        .map((m: any) => m.id || m.name || String(m))
-        .filter(Boolean)
-    )].sort()
-    const anySuccess = keys.some(key => keyModelsStatus.value.get(key)?.success)
-    if (!anySuccess) {
+    const allModels = new Set<string>(targetModelOptions.value)
+    results
+      .flat()
+      .map((m: any) => m.id || m.name || String(m))
+      .filter(Boolean)
+      .forEach(model => allModels.add(model))
+    targetModelOptions.value = Array.from(allModels).sort()
+
+    const allFailed = keys.every(key => {
+      const status = keyModelsStatus.value.get(key)
+      return status && !status.success
+    })
+    if (allFailed) {
       fetchedModelsError.value = t('addChannel.allApiKeysModelsFailed')
     }
     console.log('[fetchTargetModels] 成功获取模型', targetModelOptions.value.length)
