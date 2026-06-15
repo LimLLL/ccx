@@ -213,27 +213,34 @@ watch(() => props.open, (isOpen) => {
       >
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="emit('close')" />
 
-        <div class="relative z-10 flex max-h-[85vh] w-[560px] max-w-[90vw] flex-col rounded-2xl border border-border bg-card shadow-2xl">
+        <div class="relative z-10 flex max-h-[85vh] w-[560px] max-w-[90vw] flex-col rounded-2xl border border-border/80 bg-gradient-to-br from-card/95 to-card/85 shadow-2xl backdrop-blur-md">
           <!-- Header -->
-          <div class="flex shrink-0 items-center justify-between border-b border-border p-4">
-            <div class="flex items-center gap-2">
-              <Zap class="h-4 w-4 text-primary" />
-              <h3 class="text-sm font-semibold">{{ t('env.runtimeCbTitle') }}</h3>
+          <div class="flex shrink-0 items-center justify-between border-b border-border/60 bg-gradient-to-r from-card/60 to-card/40 p-5 backdrop-blur-sm">
+            <div class="flex items-center gap-2.5">
+              <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
+                <Zap class="h-4 w-4 fill-primary/20 text-primary" />
+              </div>
+              <h3 class="text-base font-bold tracking-tight">{{ t('env.runtimeCbTitle') }}</h3>
             </div>
           </div>
 
           <!-- Body -->
           <ScrollArea class="flex-1 min-h-0">
-            <div class="p-4 space-y-5">
-              <Alert v-if="error" variant="destructive">
+            <div class="p-5 space-y-5">
+              <Alert v-if="error" variant="destructive" class="shadow-sm">
                 <p class="text-xs">{{ error }}</p>
               </Alert>
-              <Alert v-if="success" variant="default">
+              <Alert v-if="success" variant="default" class="shadow-sm">
                 <p class="text-xs text-green-600">{{ success }}</p>
               </Alert>
 
               <!-- 基础参数：三列 -->
-              <div class="flex gap-2">
+              <div class="rounded-xl border border-border/60 bg-gradient-to-br from-background/60 to-background/40 p-4 shadow-sm backdrop-blur-sm">
+                <div class="mb-3 flex items-center gap-1.5 border-b border-border/40 pb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-primary">Circuit Breaker</span>
+                </div>
+                <div class="flex gap-2">
                 <div class="flex-1 px-1">
                   <div class="flex items-center justify-between mb-1">
                     <span class="text-[11px] text-muted-foreground">{{ t('env.runtimeCbWindowSize') }}</span>
@@ -289,9 +296,15 @@ watch(() => props.open, (isOpen) => {
                   <div class="flex justify-between text-[10px] text-muted-foreground"><span>1</span><span>100</span></div>
                 </div>
               </div>
+              </div>
 
               <!-- 流式超时：三列 -->
-              <div class="flex gap-2">
+              <div class="rounded-xl border border-border/60 bg-gradient-to-br from-background/60 to-background/40 p-4 shadow-sm backdrop-blur-sm">
+                <div class="mb-3 flex items-center gap-1.5 border-b border-border/40 pb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-primary">Stream Timeout</span>
+                </div>
+                <div class="flex gap-2">
                 <div class="flex-1 px-1">
                   <div class="flex items-center justify-between mb-1">
                     <span class="text-[11px] text-muted-foreground">{{ t('env.runtimeCbStreamFirstContentTimeout') }}</span>
@@ -347,9 +360,10 @@ watch(() => props.open, (isOpen) => {
                   <div class="flex justify-between text-[10px] text-muted-foreground"><span>30s</span><span>300s</span></div>
                 </div>
               </div>
+              </div>
 
               <!-- 预设按钮 -->
-              <div class="flex gap-2">
+              <div class="flex gap-2 px-1">
                 <Button
                   v-for="p in presets"
                   :key="p.key"
@@ -363,17 +377,20 @@ watch(() => props.open, (isOpen) => {
               </div>
 
               <!-- 历史图片轮次限制 -->
-              <div class="border-t border-border pt-4">
+              <div class="rounded-xl border border-border/60 bg-gradient-to-br from-background/60 to-background/40 p-4 shadow-sm backdrop-blur-sm">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-xs font-medium">{{ t('env.historicalImageTurnLimitTitle') }}</p>
-                    <p class="text-[11px] text-muted-foreground mt-0.5">{{ t('env.historicalImageTurnLimitHint') }}</p>
+                    <div class="flex items-center gap-1.5 mb-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                      <p class="text-xs font-semibold">{{ t('env.historicalImageTurnLimitTitle') }}</p>
+                    </div>
+                    <p class="text-[11px] text-muted-foreground">{{ t('env.historicalImageTurnLimitHint') }}</p>
                   </div>
                   <input
                     v-model.number="historicalImageLimit"
                     type="number"
                     min="0"
-                    class="w-16 h-7 rounded border border-input bg-background px-2 text-xs text-center font-mono"
+                    class="w-20 h-8 rounded-lg border border-input/80 bg-background/80 px-3 text-xs text-center font-mono shadow-sm transition-all hover:border-input focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
               </div>
@@ -381,12 +398,12 @@ watch(() => props.open, (isOpen) => {
           </ScrollArea>
 
           <!-- Footer -->
-          <div class="flex shrink-0 items-center justify-end gap-2 border-t border-border p-3">
-            <Button variant="outline" size="sm" class="text-xs" @click="emit('close')">
+          <div class="flex shrink-0 items-center justify-end gap-2.5 border-t border-border/60 bg-gradient-to-r from-card/40 to-card/30 p-4 backdrop-blur-sm">
+            <Button variant="outline" size="sm" class="text-xs shadow-sm hover:shadow-md transition-all" @click="emit('close')">
               {{ t('common.cancel') }}
             </Button>
-            <Button size="sm" :disabled="saving" class="text-xs" @click="saveConfig">
-              <Save class="h-3 w-3 mr-1" :class="{ 'animate-spin': saving }" />
+            <Button size="sm" :disabled="saving" class="text-xs shadow-sm hover:shadow-lg transition-all" @click="saveConfig">
+              <Save class="h-3 w-3 mr-1.5" :class="{ 'animate-spin': saving }" />
               {{ t('env.save') }}
             </Button>
           </div>
@@ -400,31 +417,53 @@ watch(() => props.open, (isOpen) => {
 .cb-slider {
   -webkit-appearance: none;
   appearance: none;
-  height: 5px;
+  height: 6px;
   border-radius: 3px;
-  background: hsl(var(--muted));
+  background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted)/0.6) 100%);
   outline: none;
   cursor: pointer;
+  transition: background 0.15s;
+}
+.cb-slider:hover {
+  background: linear-gradient(90deg, hsl(var(--primary)/0.15) 0%, hsl(var(--muted)/0.8) 100%);
 }
 .cb-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: hsl(var(--primary));
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%);
   cursor: pointer;
-  border: 2px solid hsl(var(--background));
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 2.5px solid hsl(var(--background));
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 0 0 0 hsl(var(--primary)/0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cb-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25), 0 0 0 4px hsl(var(--primary)/0.15);
+}
+.cb-slider::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 0 0 6px hsl(var(--primary)/0.2);
 }
 .cb-slider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: hsl(var(--primary));
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%);
   cursor: pointer;
-  border: 2px solid hsl(var(--background));
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 2.5px solid hsl(var(--background));
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cb-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+}
+.cb-slider::-moz-range-thumb:active {
+  transform: scale(1.05);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 .cb-slider:disabled {
   opacity: 0.5;
