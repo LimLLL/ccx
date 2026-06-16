@@ -38,10 +38,6 @@ const { tf } = useLanguage()
 
     <!-- 检测结果 -->
     <div class="rounded-xl border border-border/60 bg-card/50 p-4">
-      <div class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {{ tf('addChannel.detectionStatus', '识别状态') }}
-      </div>
-
       <div class="space-y-3">
         <!-- Base URLs（独占一行） -->
         <div class="space-y-2 rounded-lg border border-border bg-background/70 p-3">
