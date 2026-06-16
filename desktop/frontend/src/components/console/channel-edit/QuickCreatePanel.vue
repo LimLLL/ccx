@@ -60,7 +60,7 @@ const { tf } = useLanguage()
         </div>
 
         <!-- 两栏：左（渠道名称+上游类型）右（API Keys） -->
-        <div class="grid gap-3 md:grid-cols-2">
+        <div class="grid items-start gap-3 md:grid-cols-2">
           <!-- 左栏 -->
           <div class="space-y-3">
             <!-- 渠道名称预览 -->
