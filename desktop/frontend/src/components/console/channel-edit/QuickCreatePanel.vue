@@ -37,7 +37,7 @@ const { tf } = useLanguage()
     />
 
     <!-- 检测结果 -->
-    <div class="rounded-xl border border-border/60 bg-card/50 p-4">
+    <div class="rounded-xl border border-border/60 p-4">
       <div class="space-y-3">
         <!-- Base URLs（独占一行） -->
         <div class="space-y-2 rounded-lg border border-border bg-background/70 p-3">
