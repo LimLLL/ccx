@@ -36,26 +36,28 @@ func GetManager() *ClientManager {
 // 注意：启用自动压缩让Go处理gzip，配合请求头清理确保正确解压
 // proxyURL: 可选的代理地址（支持 http/https/socks5 协议）
 func (cm *ClientManager) GetStandardClient(timeout time.Duration, insecure bool, proxyURL ...string) *http.Client {
-	return cm.getStandardClient(timeout, insecure, true, proxyURL...)
+	return cm.getStandardClient(timeout, 0, insecure, true, proxyURL...)
+}
+
+// GetStandardClientWithResponseHeaderTimeout 获取标准客户端，并显式指定等待响应头超时。
+func (cm *ClientManager) GetStandardClientWithResponseHeaderTimeout(timeout time.Duration, responseHeaderTimeout time.Duration, insecure bool, proxyURL ...string) *http.Client {
+	return cm.getStandardClient(timeout, responseHeaderTimeout, insecure, true, proxyURL...)
 }
 
 // NewStandardClient 获取标准客户端但不进入缓存（适用于临时代理等高变参数）
 func (cm *ClientManager) NewStandardClient(timeout time.Duration, insecure bool, proxyURL ...string) *http.Client {
-	return cm.getStandardClient(timeout, insecure, false, proxyURL...)
+	return cm.getStandardClient(timeout, 0, insecure, false, proxyURL...)
 }
 
-func (cm *ClientManager) getStandardClient(timeout time.Duration, insecure bool, useCache bool, proxyURL ...string) *http.Client {
-	// 从配置获取响应头超时时间
-	envConfig := config.NewEnvConfig()
-	responseHeaderTimeout := time.Duration(envConfig.ResponseHeaderTimeout) * time.Second
-
+func (cm *ClientManager) getStandardClient(timeout time.Duration, responseHeaderTimeout time.Duration, insecure bool, useCache bool, proxyURL ...string) *http.Client {
+	responseHeaderTimeout = normalizeResponseHeaderTimeout(responseHeaderTimeout)
 	// 提取代理 URL
 	proxyAddr := ""
 	if len(proxyURL) > 0 {
 		proxyAddr = proxyURL[0]
 	}
 
-	key := fmt.Sprintf("standard-%d-%t-%d-%s", timeout, insecure, envConfig.ResponseHeaderTimeout, proxyAddr)
+	key := fmt.Sprintf("standard-%d-%t-%d-%s", timeout, insecure, responseHeaderTimeout, proxyAddr)
 
 	if useCache {
 		cm.mu.RLock()
@@ -110,17 +112,19 @@ func (cm *ClientManager) getStandardClient(timeout time.Duration, insecure bool,
 // GetStreamClient 获取流式客户端（无超时，用于 SSE 流式响应）
 // proxyURL: 可选的代理地址（支持 http/https/socks5 协议）
 func (cm *ClientManager) GetStreamClient(insecure bool, proxyURL ...string) *http.Client {
-	// 从配置获取响应头超时时间
-	envConfig := config.NewEnvConfig()
-	responseHeaderTimeout := time.Duration(envConfig.ResponseHeaderTimeout) * time.Second
+	return cm.GetStreamClientWithResponseHeaderTimeout(0, insecure, proxyURL...)
+}
 
+// GetStreamClientWithResponseHeaderTimeout 获取流式客户端，并显式指定等待响应头超时。
+func (cm *ClientManager) GetStreamClientWithResponseHeaderTimeout(responseHeaderTimeout time.Duration, insecure bool, proxyURL ...string) *http.Client {
+	responseHeaderTimeout = normalizeResponseHeaderTimeout(responseHeaderTimeout)
 	// 提取代理 URL
 	proxyAddr := ""
 	if len(proxyURL) > 0 {
 		proxyAddr = proxyURL[0]
 	}
 
-	key := fmt.Sprintf("stream-%t-%d-%s", insecure, envConfig.ResponseHeaderTimeout, proxyAddr)
+	key := fmt.Sprintf("stream-%t-%d-%s", insecure, responseHeaderTimeout, proxyAddr)
 
 	cm.mu.RLock()
 	if client, ok := cm.clients[key]; ok {
@@ -161,6 +165,14 @@ func (cm *ClientManager) GetStreamClient(insecure bool, proxyURL ...string) *htt
 
 	cm.clients[key] = client
 	return client
+}
+
+func normalizeResponseHeaderTimeout(responseHeaderTimeout time.Duration) time.Duration {
+	if responseHeaderTimeout > 0 {
+		return responseHeaderTimeout
+	}
+	envConfig := config.NewEnvConfig()
+	return time.Duration(config.GetRuntimeResponseHeaderTimeoutMs(envConfig.ResponseHeaderTimeout*1000)) * time.Millisecond
 }
 
 // applyProxy 为 transport 配置代理

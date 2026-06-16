@@ -329,6 +329,8 @@ func main() {
 	traceAffinityManager := session.NewTraceAffinityManager()
 
 	applyCircuitBreakerConfig := func(cfg config.Config) {
+		requestTimeoutMs := envCfg.RequestTimeout
+		responseHeaderTimeoutMs := envCfg.ResponseHeaderTimeout * 1000
 		params := metrics.CircuitBreakerParams{
 			WindowSize:                   envCfg.MetricsWindowSize,
 			FailureThreshold:             envCfg.MetricsFailureThreshold,
@@ -347,6 +349,12 @@ func main() {
 			if cfg.CircuitBreaker.ConsecutiveFailuresThreshold != nil {
 				params.ConsecutiveFailuresThreshold = int64(*cfg.CircuitBreaker.ConsecutiveFailuresThreshold)
 			}
+			if cfg.CircuitBreaker.RequestTimeoutMs != nil {
+				requestTimeoutMs = *cfg.CircuitBreaker.RequestTimeoutMs
+			}
+			if cfg.CircuitBreaker.ResponseHeaderTimeoutMs != nil {
+				responseHeaderTimeoutMs = *cfg.CircuitBreaker.ResponseHeaderTimeoutMs
+			}
 			if cfg.CircuitBreaker.StreamFirstContentTimeoutMs != nil {
 				params.StreamFirstContentTimeoutMs = *cfg.CircuitBreaker.StreamFirstContentTimeoutMs
 			}
@@ -357,6 +365,7 @@ func main() {
 				params.StreamToolCallIdleTimeoutMs = *cfg.CircuitBreaker.StreamToolCallIdleTimeoutMs
 			}
 		}
+		config.SetRuntimeTimeouts(requestTimeoutMs, responseHeaderTimeoutMs)
 		messagesMetricsManager.UpdateCircuitBreakerConfig(params)
 		responsesMetricsManager.UpdateCircuitBreakerConfig(params)
 		geminiMetricsManager.UpdateCircuitBreakerConfig(params)
@@ -740,7 +749,7 @@ func main() {
 		apiGroup.PUT("/settings/historical-image-turn-limit", handlers.SetHistoricalImageTurnLimit(cfgManager))
 
 		// 熔断器运行时设置
-		apiGroup.GET("/settings/circuit-breaker", handlers.GetCircuitBreaker(messagesMetricsManager.GetCircuitBreakerConfig))
+		apiGroup.GET("/settings/circuit-breaker", handlers.GetCircuitBreaker(messagesMetricsManager.GetCircuitBreakerConfig, envCfg))
 		apiGroup.PUT("/settings/circuit-breaker", handlers.SetCircuitBreaker(cfgManager))
 
 		// 会话调度看板 API

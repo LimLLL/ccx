@@ -661,6 +661,29 @@ func TestSendRequestWithLifecycleTraceFallsBackToGlobalRequestTimeout(t *testing
 	}
 }
 
+func TestSendRequestWithLifecycleTraceUsesChannelResponseHeaderTimeout(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		time.Sleep(80 * time.Millisecond)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("NewRequest() err = %v", err)
+	}
+
+	upstream := &config.UpstreamConfig{ResponseHeaderTimeoutMs: 20}
+	envCfg := &config.EnvConfig{RequestTimeout: 500, ResponseHeaderTimeout: 1}
+	_, err = SendRequestWithLifecycleTrace(req, upstream, envCfg, false, "Messages", nil)
+	if err == nil {
+		t.Fatal("expected response header timeout")
+	}
+	if netErr, ok := err.(interface{ Timeout() bool }); !ok || !netErr.Timeout() {
+		t.Fatalf("error = %v, want timeout", err)
+	}
+}
+
 func TestRestoreRequestBodyAndContextCacheUseAttemptBody(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()

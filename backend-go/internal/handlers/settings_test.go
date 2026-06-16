@@ -41,6 +41,8 @@ func performSettingsJSON(handler gin.HandlerFunc, method string, body string) *h
 
 func TestGetCircuitBreaker_ReturnsToolCallIdleTimeout(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	config.SetRuntimeTimeouts(123000, 45000)
+	t.Cleanup(func() { config.SetRuntimeTimeouts(300000, 60000) })
 
 	w := performSettingsJSON(GetCircuitBreaker(func() metrics.CircuitBreakerParams {
 		return metrics.CircuitBreakerParams{
@@ -51,7 +53,7 @@ func TestGetCircuitBreaker_ReturnsToolCallIdleTimeout(t *testing.T) {
 			StreamInactivityTimeoutMs:    20000,
 			StreamToolCallIdleTimeoutMs:  30000,
 		}
-	}), http.MethodGet, "")
+	}, &config.EnvConfig{RequestTimeout: 300000, ResponseHeaderTimeout: 60}), http.MethodGet, "")
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
@@ -63,6 +65,51 @@ func TestGetCircuitBreaker_ReturnsToolCallIdleTimeout(t *testing.T) {
 	}
 	if got := int(body["streamToolCallIdleTimeoutMs"].(float64)); got != 30000 {
 		t.Fatalf("streamToolCallIdleTimeoutMs = %d, want 30000", got)
+	}
+	if got := int(body["requestTimeoutMs"].(float64)); got != 123000 {
+		t.Fatalf("requestTimeoutMs = %d, want 123000", got)
+	}
+	if got := int(body["responseHeaderTimeoutMs"].(float64)); got != 45000 {
+		t.Fatalf("responseHeaderTimeoutMs = %d, want 45000", got)
+	}
+}
+
+func TestSetCircuitBreaker_AcceptsRequestLifecycleTimeouts(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cfgManager := newSettingsTestConfigManager(t)
+
+	w := performSettingsJSON(SetCircuitBreaker(cfgManager), http.MethodPut, `{"requestTimeoutMs":300000,"responseHeaderTimeoutMs":180000}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d, body=%s", w.Code, http.StatusOK, w.Body.String())
+	}
+
+	cfg := cfgManager.GetCircuitBreakerConfig()
+	if cfg.RequestTimeoutMs == nil || *cfg.RequestTimeoutMs != 300000 {
+		t.Fatalf("saved requestTimeoutMs = %v, want 300000", cfg.RequestTimeoutMs)
+	}
+	if cfg.ResponseHeaderTimeoutMs == nil || *cfg.ResponseHeaderTimeoutMs != 180000 {
+		t.Fatalf("saved responseHeaderTimeoutMs = %v, want 180000", cfg.ResponseHeaderTimeoutMs)
+	}
+}
+
+func TestSetCircuitBreaker_RejectsInvalidRequestLifecycleTimeouts(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cfgManager := newSettingsTestConfigManager(t)
+
+	w := performSettingsJSON(SetCircuitBreaker(cfgManager), http.MethodPut, `{"requestTimeoutMs":300001}`)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("requestTimeoutMs status = %d, want %d", w.Code, http.StatusBadRequest)
+	}
+	if !strings.Contains(w.Body.String(), "requestTimeoutMs") {
+		t.Fatalf("response body %q should mention requestTimeoutMs", w.Body.String())
+	}
+
+	w = performSettingsJSON(SetCircuitBreaker(cfgManager), http.MethodPut, `{"responseHeaderTimeoutMs":999}`)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("responseHeaderTimeoutMs status = %d, want %d", w.Code, http.StatusBadRequest)
+	}
+	if !strings.Contains(w.Body.String(), "responseHeaderTimeoutMs") {
+		t.Fatalf("response body %q should mention responseHeaderTimeoutMs", w.Body.String())
 	}
 }
 

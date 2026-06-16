@@ -75,13 +75,15 @@ func SetHistoricalImageTurnLimit(cfgManager *config.ConfigManager) gin.HandlerFu
 
 // GetCircuitBreaker 获取熔断器运行时配置
 // getCurrent: 返回当前运行时生效的熔断器参数的函数
-func GetCircuitBreaker(getCurrent func() metrics.CircuitBreakerParams) gin.HandlerFunc {
+func GetCircuitBreaker(getCurrent func() metrics.CircuitBreakerParams, envCfg *config.EnvConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		params := getCurrent()
 		c.JSON(200, gin.H{
 			"windowSize":                   params.WindowSize,
 			"failureThreshold":             params.FailureThreshold,
 			"consecutiveFailuresThreshold": params.ConsecutiveFailuresThreshold,
+			"requestTimeoutMs":             config.GetRuntimeRequestTimeoutMs(envCfg.RequestTimeout),
+			"responseHeaderTimeoutMs":      config.GetRuntimeResponseHeaderTimeoutMs(envCfg.ResponseHeaderTimeout * 1000),
 			"streamFirstContentTimeoutMs":  params.StreamFirstContentTimeoutMs,
 			"streamInactivityTimeoutMs":    params.StreamInactivityTimeoutMs,
 			"streamToolCallIdleTimeoutMs":  params.StreamToolCallIdleTimeoutMs,
@@ -96,6 +98,8 @@ func SetCircuitBreaker(cfgManager *config.ConfigManager) gin.HandlerFunc {
 			WindowSize                   *int     `json:"windowSize"`
 			FailureThreshold             *float64 `json:"failureThreshold"`
 			ConsecutiveFailuresThreshold *int     `json:"consecutiveFailuresThreshold"`
+			RequestTimeoutMs             *int     `json:"requestTimeoutMs"`
+			ResponseHeaderTimeoutMs      *int     `json:"responseHeaderTimeoutMs"`
 			StreamFirstContentTimeoutMs  *int     `json:"streamFirstContentTimeoutMs"`
 			StreamInactivityTimeoutMs    *int     `json:"streamInactivityTimeoutMs"`
 			StreamToolCallIdleTimeoutMs  *int     `json:"streamToolCallIdleTimeoutMs"`
@@ -124,6 +128,18 @@ func SetCircuitBreaker(cfgManager *config.ConfigManager) gin.HandlerFunc {
 				return
 			}
 		}
+		if req.RequestTimeoutMs != nil {
+			if err := config.ValidateRuntimeRequestTimeoutMs(*req.RequestTimeoutMs); err != nil {
+				c.JSON(400, gin.H{"error": err.Error()})
+				return
+			}
+		}
+		if req.ResponseHeaderTimeoutMs != nil {
+			if err := config.ValidateRuntimeResponseHeaderTimeoutMs(*req.ResponseHeaderTimeoutMs); err != nil {
+				c.JSON(400, gin.H{"error": err.Error()})
+				return
+			}
+		}
 		if req.StreamFirstContentTimeoutMs != nil {
 			if *req.StreamFirstContentTimeoutMs < 5000 || *req.StreamFirstContentTimeoutMs > 300000 {
 				c.JSON(400, gin.H{"error": "streamFirstContentTimeoutMs 必须在 5000-300000 之间"})
@@ -147,6 +163,8 @@ func SetCircuitBreaker(cfgManager *config.ConfigManager) gin.HandlerFunc {
 			WindowSize:                   req.WindowSize,
 			FailureThreshold:             req.FailureThreshold,
 			ConsecutiveFailuresThreshold: req.ConsecutiveFailuresThreshold,
+			RequestTimeoutMs:             req.RequestTimeoutMs,
+			ResponseHeaderTimeoutMs:      req.ResponseHeaderTimeoutMs,
 			StreamFirstContentTimeoutMs:  req.StreamFirstContentTimeoutMs,
 			StreamInactivityTimeoutMs:    req.StreamInactivityTimeoutMs,
 			StreamToolCallIdleTimeoutMs:  req.StreamToolCallIdleTimeoutMs,
@@ -163,6 +181,8 @@ func SetCircuitBreaker(cfgManager *config.ConfigManager) gin.HandlerFunc {
 				"windowSize":                   updated.WindowSize,
 				"failureThreshold":             updated.FailureThreshold,
 				"consecutiveFailuresThreshold": updated.ConsecutiveFailuresThreshold,
+				"requestTimeoutMs":             updated.RequestTimeoutMs,
+				"responseHeaderTimeoutMs":      updated.ResponseHeaderTimeoutMs,
 				"streamFirstContentTimeoutMs":  updated.StreamFirstContentTimeoutMs,
 				"streamInactivityTimeoutMs":    updated.StreamInactivityTimeoutMs,
 				"streamToolCallIdleTimeoutMs":  updated.StreamToolCallIdleTimeoutMs,

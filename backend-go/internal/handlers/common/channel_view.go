@@ -59,6 +59,7 @@ func BuildChannelView(up config.UpstreamConfig, index int) gin.H {
 		"stripThoughtSignature":       up.StripThoughtSignature,
 		// 超时配置
 		"requestTimeoutMs":            up.RequestTimeoutMs,
+		"responseHeaderTimeoutMs":     up.ResponseHeaderTimeoutMs,
 		"streamFirstContentTimeoutMs": up.StreamFirstContentTimeoutMs,
 		"streamInactivityTimeoutMs":   up.StreamInactivityTimeoutMs,
 		"streamToolCallIdleTimeoutMs": up.StreamToolCallIdleTimeoutMs,
