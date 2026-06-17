@@ -67,6 +67,26 @@
                 </v-chip>
                 <span v-if="log.originalModel" class="text-medium-emphasis log-meta">{{ log.originalModel }} →</span>
                 <span class="font-weight-medium log-model">{{ log.model }}</span>
+                <v-chip
+                  v-if="log.originalReasoningEffort"
+                  size="small"
+                  :color="reasoningEffortColor(log.originalReasoningEffort)"
+                  variant="tonal"
+                  class="log-reasoning-chip"
+                  :title="log.originalReasoningEffort"
+                >
+                  {{ t('channelLogs.reasoning.original') }} {{ formatReasoningEffort(log.originalReasoningEffort) }}
+                </v-chip>
+                <v-chip
+                  v-if="log.actualReasoningEffort"
+                  size="small"
+                  :color="reasoningEffortColor(log.actualReasoningEffort)"
+                  variant="flat"
+                  class="log-reasoning-chip"
+                  :title="log.actualReasoningEffort"
+                >
+                  {{ t('channelLogs.reasoning.actual') }} {{ formatReasoningEffort(log.actualReasoningEffort) }}
+                </v-chip>
                 <code class="text-caption bg-surface pa-1 rounded log-inline-code log-key-mask">{{ log.keyMask }}</code>
                 <code v-if="log.baseUrl" class="text-caption bg-surface pa-1 rounded log-inline-code log-base-url" :title="log.baseUrl">{{ log.baseUrl }}</code>
                 <v-chip v-if="log.isRetry" size="small" color="warning" variant="tonal">{{ t('channelLogs.retry') }}</v-chip>
@@ -196,6 +216,20 @@ const calculateDurations = (log: ChannelLogEntry) => {
 const formatDurationSeconds = (durationMs: number): string => {
   const seconds = durationMs / 1000
   return `${Number.parseFloat(seconds.toPrecision(3))}s`
+}
+
+const formatReasoningEffort = (effort: string): string => {
+  const value = effort.trim()
+  return value.length > 24 ? `${value.slice(0, 21)}...` : value
+}
+
+const reasoningEffortColor = (effort: string): string => {
+  const value = effort.toLowerCase()
+  if (value === 'none' || value === 'disabled' || value === 'false') return 'default'
+  if (value === 'minimal' || value === 'low') return 'info'
+  if (value === 'high' || value === 'xhigh' || value === 'max') return 'warning'
+  if (value.startsWith('budget=')) return 'secondary'
+  return 'primary'
 }
 
 const formatErrorInfo = (errorInfo: string): string => {
