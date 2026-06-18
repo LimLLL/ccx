@@ -254,6 +254,52 @@ func TestShouldBlacklistKey_BalanceMessages(t *testing.T) {
 				Message:         "您的套餐已过期，请续费后继续使用 (request id: 202606040135546143661918268d9d6tMVNpobz)",
 			},
 		},
+		{
+			name:       "401 sub2api api key disabled code should blacklist as auth",
+			statusCode: 401,
+			body:       `{"code":"API_KEY_DISABLED","message":"API key is disabled"}`,
+			want: BlacklistResult{
+				ShouldBlacklist: true,
+				Reason:          "authentication_error",
+				Message:         "API key is disabled",
+			},
+		},
+		{
+			name:       "403 sub2api api key expired code should blacklist as auth",
+			statusCode: 403,
+			body:       `{"error":{"code":"API_KEY_EXPIRED","message":"API key 已过期","type":"error"}}`,
+			want: BlacklistResult{
+				ShouldBlacklist: true,
+				Reason:          "authentication_error",
+				Message:         "API key 已过期",
+			},
+		},
+		{
+			name:       "403 sub2api group disabled code should blacklist as permission",
+			statusCode: 403,
+			body:       `{"error":{"code":"GROUP_DISABLED","message":"API Key 所属分组已停用","type":"permission_error"}}`,
+			want: BlacklistResult{
+				ShouldBlacklist: true,
+				Reason:          "permission_error",
+				Message:         "API Key 所属分组已停用",
+			},
+		},
+		{
+			name:       "403 done hub quota code should blacklist even with generic wrapper type",
+			statusCode: 403,
+			body:       `{"error":{"code":"pre_consume_token_quota_failed","message":"error","type":"one_hub_error"}}`,
+			want: BlacklistResult{
+				ShouldBlacklist: true,
+				Reason:          "insufficient_balance",
+				Message:         "error",
+			},
+		},
+		{
+			name:       "429 rate limit code should not blacklist as balance",
+			statusCode: 429,
+			body:       `{"error":{"code":"rate_limit_exceeded","message":"error","type":"one_hub_error"}}`,
+			want:       BlacklistResult{},
+		},
 		// 以下用例验证双词组合匹配能覆盖旧精确关键词列表遗漏的变体
 		{
 			name:       "403 credit limit reached should blacklist via dual-word",

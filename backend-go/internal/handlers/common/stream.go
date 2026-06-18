@@ -2704,12 +2704,17 @@ func DetectStreamBlacklistError(event string) (reason string, message string) {
 // isInsufficientBalanceCode 检查错误码是否为已知的余额不足代码
 func isInsufficientBalanceCode(code string) bool {
 	knownCodes := []string{
-		"1113",                   // Kimi: 余额不足或无可用资源包
-		"INSUFFICIENT_BALANCE",   // 通用余额不足
-		"INSUFFICIENT_QUOTA",     // 通用额度不足
+		"1113",                 // Kimi: 余额不足或无可用资源包
+		"INSUFFICIENT_BALANCE", // 通用余额不足
+		"INSUFFICIENT_QUOTA",   // 通用额度不足
+		"INSUFFICIENT_USER_QUOTA",
+		"API_KEY_QUOTA_EXHAUSTED",
 		"USAGE_LIMIT_EXCEEDED",   // 当日/周期额度耗尽
 		"DAILY_LIMIT_EXCEEDED",   // 当日额度耗尽
 		"SUBSCRIPTION_NOT_FOUND", // 订阅不存在/未激活
+		"SUBSCRIPTION_INVALID",
+		"PRE_CONSUME_TOKEN_QUOTA_FAILED",
+		"PRE_CONSUME_QUOTA_FAILED",
 	}
 	for _, c := range knownCodes {
 		if strings.EqualFold(code, c) {

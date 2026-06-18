@@ -484,6 +484,92 @@ func TestShouldRetryWithNextKey_InvalidRequest5xxShouldFailover(t *testing.T) {
 	}
 }
 
+func TestShouldRetryWithNextKey_BusinessCodeOnlyErrors(t *testing.T) {
+	tests := []struct {
+		name         string
+		statusCode   int
+		body         string
+		wantFailover bool
+		wantQuota    bool
+	}{
+		{
+			name:         "sub2api quota code on 400 still failovers as quota",
+			statusCode:   400,
+			body:         `{"code":"API_KEY_QUOTA_EXHAUSTED","message":"error"}`,
+			wantFailover: true,
+			wantQuota:    true,
+		},
+		{
+			name:         "sub2api disabled key code on 400 still failovers as auth",
+			statusCode:   400,
+			body:         `{"error":{"code":"API_KEY_DISABLED","message":"error","type":"error"}}`,
+			wantFailover: true,
+			wantQuota:    false,
+		},
+		{
+			name:         "done-hub service unavailable code on 400 still failovers as transient",
+			statusCode:   400,
+			body:         `{"error":{"code":"service_unavailable","message":"error","type":"one_hub_error"}}`,
+			wantFailover: true,
+			wantQuota:    false,
+		},
+		{
+			name:         "new-api sensitive words code blocks failover even on 500",
+			statusCode:   500,
+			body:         `{"error":{"code":"violation_fee.grok.csam","message":"error","type":"new_api_error"}}`,
+			wantFailover: false,
+			wantQuota:    false,
+		},
+		{
+			name:         "new-api content moderation failed blocks failover even on 500",
+			statusCode:   500,
+			body:         `{"error":{"code":"content_moderation_failed","message":"content moderation failed","type":"upstream_error"}}`,
+			wantFailover: false,
+			wantQuota:    false,
+		},
+		{
+			name:         "gemini resource exhausted status on 400 failovers as quota",
+			statusCode:   400,
+			body:         `{"error":{"code":429,"message":"error","status":"RESOURCE_EXHAUSTED"}}`,
+			wantFailover: true,
+			wantQuota:    true,
+		},
+		{
+			name:         "google error info rate limit reason on 400 failovers as quota",
+			statusCode:   400,
+			body:         `{"error":{"message":"error","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"RATE_LIMIT_EXCEEDED"}]}}`,
+			wantFailover: true,
+			wantQuota:    true,
+		},
+		{
+			name:         "google service disabled reason on 400 failovers as permission",
+			statusCode:   400,
+			body:         `{"error":{"message":"error","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED"}]}}`,
+			wantFailover: true,
+			wantQuota:    false,
+		},
+		{
+			name:         "provider invalid parameter on 400 does not failover",
+			statusCode:   400,
+			body:         `{"code":"InvalidParameter","message":"Role must be user or assistant and Content length must be greater than 0"}`,
+			wantFailover: false,
+			wantQuota:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotFailover, gotQuota := ShouldRetryWithNextKey(tt.statusCode, []byte(tt.body), false, "Messages")
+			if gotFailover != tt.wantFailover {
+				t.Errorf("ShouldRetryWithNextKey(%d, %s) failover = %v, want %v", tt.statusCode, tt.body, gotFailover, tt.wantFailover)
+			}
+			if gotQuota != tt.wantQuota {
+				t.Errorf("ShouldRetryWithNextKey(%d, %s) quota = %v, want %v", tt.statusCode, tt.body, gotQuota, tt.wantQuota)
+			}
+		})
+	}
+}
+
 // TestIsNonRetryableErrorCode 测试参数校验类不可重试错误码判断
 func TestIsNonRetryableErrorCode(t *testing.T) {
 	tests := []struct {
@@ -593,10 +679,13 @@ func TestIsContentModerationErrorCode(t *testing.T) {
 	}{
 		// 内容审核相关 - 不应重试
 		{"sensitive_words_detected", true},
+		{"violation_fee.grok.csam", true},
+		{"content_moderation_failed", true},
 		{"content_policy_violation", true},
 		{"content_filter", true},
 		{"content_blocked", true},
 		{"moderation_blocked", true},
+		{"prompt_blocked", true},
 		// 大小写不敏感
 		{"SENSITIVE_WORDS_DETECTED", true},
 		{"Content_Policy_Violation", true},

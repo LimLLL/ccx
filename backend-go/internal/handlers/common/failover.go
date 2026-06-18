@@ -193,6 +193,20 @@ func classifyByErrorMessageWithLogTag(bodyBytes []byte, apiType string, logTag s
 		}
 	}
 
+	if errCode, ok := firstStringField(errResp, "code", "status", "reason"); ok {
+		if isNonRetryableErrorCode(errCode) {
+			LogWithTag(logTag, "[%s-Failover-Debug] 检测到顶层不可重试错误码: %s", apiType, errCode)
+			return false, false
+		}
+		if failover, quota := classifyErrorCode(errCode); failover {
+			LogWithTag(logTag, "[%s-Failover-Debug] 提取到顶层错误码: %s", apiType, errCode)
+			return true, quota
+		}
+	}
+	if failover, quota := classifyDetailsFromMap(errResp); failover {
+		LogWithTag(logTag, "[%s-Failover-Debug] 提取到顶层 details 错误码", apiType)
+		return true, quota
+	}
 	if failover, quota, field := classifyMessageFromMap(errResp); failover {
 		LogWithTag(logTag, "[%s-Failover-Debug] 提取到顶层消息 (字段: %s)", apiType, field)
 		return true, quota
@@ -216,6 +230,20 @@ func classifyByErrorMessageWithLogTag(bodyBytes []byte, apiType string, logTag s
 			LogWithTag(logTag, "[%s-Failover-Debug] 检测到不可重试错误码: %s", apiType, errCode)
 			return false, false
 		}
+		if failover, quota := classifyErrorCode(errCode); failover {
+			LogWithTag(logTag, "[%s-Failover-Debug] 提取到 error.code: %s", apiType, errCode)
+			return true, quota
+		}
+	}
+	if errCode, ok := firstStringField(errObj, "status", "reason"); ok {
+		if failover, quota := classifyErrorCode(errCode); failover {
+			LogWithTag(logTag, "[%s-Failover-Debug] 提取到 error.%s: %s", apiType, "status/reason", errCode)
+			return true, quota
+		}
+	}
+	if failover, quota := classifyDetailsFromMap(errObj); failover {
+		LogWithTag(logTag, "[%s-Failover-Debug] 提取到 error.details 错误码", apiType)
+		return true, quota
 	}
 
 	if isSchemaValidationError(errObj) {
@@ -230,8 +258,22 @@ func classifyByErrorMessageWithLogTag(bodyBytes []byte, apiType string, logTag s
 
 	// 如果 upstream_error 是嵌套对象，尝试提取其中的消息
 	if upstreamErr, ok := errObj["upstream_error"].(map[string]interface{}); ok {
+		if errCode, ok := firstStringField(upstreamErr, "code", "status", "reason"); ok {
+			if isNonRetryableErrorCode(errCode) {
+				LogWithTag(logTag, "[%s-Failover-Debug] 检测到嵌套 upstream_error 不可重试错误码: %s", apiType, errCode)
+				return false, false
+			}
+			if failover, quota := classifyErrorCode(errCode); failover {
+				LogWithTag(logTag, "[%s-Failover-Debug] 提取到嵌套 upstream_error 错误码: %s", apiType, errCode)
+				return true, quota
+			}
+		}
 		if failover, quota, field := classifyMessageFromMap(upstreamErr); failover {
 			LogWithTag(logTag, "[%s-Failover-Debug] 提取到嵌套 upstream_error.%s", apiType, field)
+			return true, quota
+		}
+		if failover, quota := classifyDetailsFromMap(upstreamErr); failover {
+			LogWithTag(logTag, "[%s-Failover-Debug] 提取到嵌套 upstream_error.details 错误码", apiType)
 			return true, quota
 		}
 	}
@@ -312,6 +354,28 @@ func classifyMessageFromMap(m map[string]interface{}) (bool, bool, string) {
 	return false, false, ""
 }
 
+func classifyDetailsFromMap(m map[string]interface{}) (bool, bool) {
+	details, ok := m["details"].([]interface{})
+	if !ok {
+		return false, false
+	}
+	for _, item := range details {
+		detail, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if code, ok := firstStringField(detail, "reason", "code", "status"); ok {
+			if failover, quota := classifyErrorCode(code); failover {
+				return true, quota
+			}
+		}
+		if failover, quota, _ := classifyMessageFromMap(detail); failover {
+			return true, quota
+		}
+	}
+	return false, false
+}
+
 // classifyMessage 基于错误消息内容分类
 func classifyMessage(msg string) (bool, bool) {
 	msgLower := strings.ToLower(msg)
@@ -366,7 +430,8 @@ func classifyMessage(msg string) (bool, bool) {
 		"timeout", "timed out", "temporarily",
 		"overloaded", "unavailable", "retry",
 		"server error", "internal error",
-		"超时", "暂时", "重试",
+		"超时", "暂时", "重试", "稍后再试",
+		"负载已饱和", "已饱和",
 	}
 	for _, keyword := range transientKeywords {
 		if strings.Contains(msgLower, keyword) {
@@ -440,6 +505,123 @@ func classifyErrorType(errType string) (bool, bool) {
 	}
 
 	return false, false
+}
+
+// classifyErrorCode 基于中转站常见业务错误码分类。
+// 只做明确 code 的正向识别；invalid_request/schema 类仍由不可重试逻辑优先处理。
+func classifyErrorCode(code string) (bool, bool) {
+	codeLower := strings.ToLower(strings.TrimSpace(code))
+	if codeLower == "" {
+		return false, false
+	}
+
+	quotaCodes := []string{
+		"rate_limit", "rate_limit_error", "rate_limit_exceeded", "resource_exhausted",
+		"over_quota", "quota_exceeded",
+	}
+	if codeInSet(codeLower, quotaCodes...) ||
+		strings.HasPrefix(codeLower, "rate_limit_") ||
+		strings.HasSuffix(codeLower, "_quota_exhausted") ||
+		strings.HasSuffix(codeLower, "_quota_exceeded") {
+		return true, true
+	}
+	if isInsufficientBalanceCode(codeLower) {
+		return true, true
+	}
+
+	if isAuthenticationErrorCode(codeLower) || isPermissionErrorCode(codeLower) {
+		return true, false
+	}
+
+	transientCodes := []string{
+		"server_error", "internal_error", "service_unavailable",
+		"upstream_error", "do_request_failed", "bad_response",
+		"bad_response_body", "bad_response_status_code", "read_response_body_failed",
+		"empty_response", "timeout", "overloaded",
+		"no_available_account",
+	}
+	if codeInSet(codeLower, transientCodes...) ||
+		strings.HasPrefix(codeLower, "bad_response_") ||
+		strings.HasPrefix(codeLower, "read_response_") ||
+		strings.HasSuffix(codeLower, "_timeout") ||
+		strings.HasSuffix(codeLower, "_overloaded") ||
+		isRetryableChannelCode(codeLower) {
+		return true, false
+	}
+
+	if codeLower == "model_not_found" {
+		return true, false
+	}
+
+	return false, false
+}
+
+func codeInSet(code string, codes ...string) bool {
+	for _, c := range codes {
+		if code == c {
+			return true
+		}
+	}
+	return false
+}
+
+func isRetryableChannelCode(code string) bool {
+	if !strings.HasPrefix(code, "channel:") {
+		return false
+	}
+	retryableChannelCodes := []string{
+		"channel:no_available_key",
+		"channel:response_time_exceeded",
+		"channel:aws_client_error",
+		"channel:invalid_key",
+		"channel:model_mapped_error",
+	}
+	return codeInSet(code, retryableChannelCodes...)
+}
+
+func isAuthenticationErrorCode(code string) bool {
+	codeLower := strings.ToLower(strings.TrimSpace(code))
+	authCodes := []string{
+		"invalid_api_key",
+		"api_key_required",
+		"api_key_disabled",
+		"api_key_expired",
+		"invalid_token",
+		"token_expired",
+		"token_revoked",
+		"empty_token",
+		"invalid_auth_header",
+		"invalid_admin_key",
+		"unauthorized",
+		"unauthenticated",
+		"user_not_found",
+		"user_inactive",
+	}
+	for _, c := range authCodes {
+		if codeLower == c {
+			return true
+		}
+	}
+	return false
+}
+
+func isPermissionErrorCode(code string) bool {
+	codeLower := strings.ToLower(strings.TrimSpace(code))
+	permissionCodes := []string{
+		"permission_error",
+		"permission_denied",
+		"access_denied",
+		"service_disabled",
+		"group_deleted",
+		"group_disabled",
+		"group_not_allowed",
+	}
+	for _, c := range permissionCodes {
+		if codeLower == c {
+			return true
+		}
+	}
+	return false
 }
 
 func isSchemaValidationError(errObj map[string]interface{}) bool {
@@ -634,10 +816,13 @@ func getMapKeys(m map[string]interface{}) []string {
 func isContentModerationErrorCode(code string) bool {
 	codes := []string{
 		"sensitive_words_detected",
+		"violation_fee.grok.csam",
+		"content_moderation_failed",
 		"content_policy_violation",
 		"content_filter",
 		"content_blocked",
 		"moderation_blocked",
+		"prompt_blocked",
 	}
 	codeLower := strings.ToLower(code)
 	for _, c := range codes {
@@ -672,12 +857,27 @@ func isContentModerationError(bodyBytes []byte) bool {
 	if err := json.Unmarshal(bodyBytes, &errResp); err != nil {
 		return false
 	}
+	if isContentModerationMap(errResp) {
+		return true
+	}
 	errObj, ok := errResp["error"].(map[string]interface{})
 	if !ok {
 		return false
 	}
-	if errCode, ok := errObj["code"].(string); ok {
-		return isContentModerationErrorCode(errCode)
+	if isContentModerationMap(errObj) {
+		return true
+	}
+	if upstreamErr, ok := errObj["upstream_error"].(map[string]interface{}); ok {
+		return isContentModerationMap(upstreamErr)
+	}
+	return false
+}
+
+func isContentModerationMap(m map[string]interface{}) bool {
+	for _, field := range []string{"code", "type", "status", "reason"} {
+		if value, ok := firstStringField(m, field); ok && isContentModerationErrorCode(value) {
+			return true
+		}
 	}
 	return false
 }
@@ -687,6 +887,9 @@ func isNonRetryableError(bodyBytes []byte, apiType string) bool {
 	var errResp map[string]interface{}
 	if err := json.Unmarshal(bodyBytes, &errResp); err != nil {
 		return false
+	}
+	if errCode, ok := firstStringField(errResp, "code"); ok && isNonRetryableErrorCode(errCode) {
+		return true
 	}
 	errObj, ok := errResp["error"].(map[string]interface{})
 	if !ok {
@@ -770,6 +973,15 @@ func toStringField(m map[string]interface{}, key string) string {
 	return ""
 }
 
+func firstStringField(m map[string]interface{}, keys ...string) (string, bool) {
+	for _, key := range keys {
+		if value := strings.TrimSpace(toStringField(m, key)); value != "" {
+			return value, true
+		}
+	}
+	return "", false
+}
+
 // isModelRoutingError 识别上游将模型路由失败误报为 5xx 的错误
 // 仅用于状态码归一化（5xx → 404），不阻断 failover
 func isModelRoutingError(bodyBytes []byte) bool {
@@ -824,7 +1036,8 @@ func ShouldBlacklistKey(statusCode int, bodyBytes []byte) BlacklistResult {
 
 	// 解析响应体
 	errType, errMessage := extractErrorInfo(bodyBytes)
-	if errType == "" && errMessage == "" {
+	errCode := extractErrorCode(bodyBytes)
+	if errType == "" && errMessage == "" && errCode == "" {
 		return BlacklistResult{}
 	}
 
@@ -832,6 +1045,13 @@ func ShouldBlacklistKey(statusCode int, bodyBytes []byte) BlacklistResult {
 
 	// 认证错误: authentication_error / invalid_api_key
 	if typeLower == "authentication_error" || typeLower == "invalid_api_key" {
+		return BlacklistResult{
+			ShouldBlacklist: true,
+			Reason:          "authentication_error",
+			Message:         truncateMessage(errMessage),
+		}
+	}
+	if isAuthenticationErrorCode(errType) || isAuthenticationErrorCode(errCode) {
 		return BlacklistResult{
 			ShouldBlacklist: true,
 			Reason:          "authentication_error",
@@ -856,9 +1076,16 @@ func ShouldBlacklistKey(statusCode int, bodyBytes []byte) BlacklistResult {
 			Message:         truncateMessage(errMessage),
 		}
 	}
+	if isPermissionErrorCode(errType) || isPermissionErrorCode(errCode) {
+		return BlacklistResult{
+			ShouldBlacklist: true,
+			Reason:          "permission_error",
+			Message:         truncateMessage(errMessage),
+		}
+	}
 
 	// 余额不足的明确错误类型/错误码
-	if isInsufficientBalanceCode(errType) || typeLower == "billing_error" {
+	if isInsufficientBalanceCode(errType) || isInsufficientBalanceCode(errCode) || typeLower == "billing_error" {
 		return BlacklistResult{
 			ShouldBlacklist: true,
 			Reason:          "insufficient_balance",
@@ -983,6 +1210,10 @@ func isAuthenticationMessage(msg string) bool {
 		"token expired",
 		"token has expired",
 		"expired token",
+		"api key is disabled",
+		"api key disabled",
+		"api key is expired",
+		"api key expired",
 		"authentication failed",
 		"authentication error",
 		"unauthorized",
@@ -991,6 +1222,12 @@ func isAuthenticationMessage(msg string) bool {
 		"无效的api key",
 		"api key无效",
 		"无效 api key",
+		"密钥已禁用",
+		"密钥已停用",
+		"密钥已过期",
+		"api key已禁用",
+		"api key已停用",
+		"api key已过期",
 		"认证失败",
 		"身份验证失败",
 		"无效的令牌",
@@ -1069,6 +1306,22 @@ func extractErrorInfo(bodyBytes []byte) (errType string, errMessage string) {
 		errMessage = m
 	}
 	return
+}
+
+func extractErrorCode(bodyBytes []byte) string {
+	var resp map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &resp); err != nil {
+		return ""
+	}
+	if errObj, ok := resp["error"].(map[string]interface{}); ok {
+		if code, ok := firstStringField(errObj, "code"); ok {
+			return code
+		}
+	}
+	if code, ok := firstStringField(resp, "code"); ok {
+		return code
+	}
+	return ""
 }
 
 // truncateMessage 截断错误信息（最多800字符），用于指标/原因字段等短摘要场景

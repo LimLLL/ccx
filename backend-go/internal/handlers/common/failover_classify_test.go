@@ -92,6 +92,8 @@ func TestClassifyMessage(t *testing.T) {
 		{"server overloaded", "Server is overloaded", true, false},
 		{"temporarily unavailable", "Service temporarily unavailable", true, false},
 		{"中文-超时", "请求超时", true, false},
+		{"中文-稍后再试", "当前分组上游负载已饱和，请稍后再试", true, false},
+		{"中文-负载饱和", "重试超时，上游负载已饱和，请稍后再试", true, false},
 
 		// 不应 failover
 		{"normal error", "Something went wrong", false, false},
@@ -186,6 +188,60 @@ func TestClassifyErrorType(t *testing.T) {
 			}
 			if gotQuota != tt.wantQuota {
 				t.Errorf("classifyErrorType(%q) quota = %v, want %v", tt.errType, gotQuota, tt.wantQuota)
+			}
+		})
+	}
+}
+
+func TestClassifyErrorCode(t *testing.T) {
+	tests := []struct {
+		name         string
+		code         string
+		wantFailover bool
+		wantQuota    bool
+	}{
+		// sub2api 业务码
+		{"sub2api api key quota exhausted", "API_KEY_QUOTA_EXHAUSTED", true, true},
+		{"sub2api usage limit exceeded", "USAGE_LIMIT_EXCEEDED", true, true},
+		{"sub2api insufficient balance", "INSUFFICIENT_BALANCE", true, true},
+		{"sub2api subscription invalid", "SUBSCRIPTION_INVALID", true, true},
+		{"sub2api api key disabled", "API_KEY_DISABLED", true, false},
+		{"sub2api api key expired", "API_KEY_EXPIRED", true, false},
+		{"sub2api group deleted", "GROUP_DELETED", true, false},
+		{"sub2api group disabled", "GROUP_DISABLED", true, false},
+		{"google service disabled", "SERVICE_DISABLED", true, false},
+
+		// done-hub / new-api 包装码
+		{"done hub insufficient user quota", "insufficient_user_quota", true, true},
+		{"done hub pre consume token quota failed", "pre_consume_token_quota_failed", true, true},
+		{"done hub service unavailable", "service_unavailable", true, false},
+		{"done hub rate limit exceeded", "rate_limit_exceeded", true, true},
+		{"new api model not found", "model_not_found", true, false},
+		{"new api do request failed", "do_request_failed", true, false},
+		{"new api bad response body", "bad_response_body", true, false},
+		{"new api read response headers failed", "read_response_headers_failed", true, false},
+		{"new api no available key", "channel:no_available_key", true, false},
+		{"new api channel invalid key", "channel:invalid_key", true, false},
+		{"gemini resource exhausted", "RESOURCE_EXHAUSTED", true, true},
+
+		// 不应由 code 正向 failover
+		{"invalid request", "invalid_request", false, false},
+		{"sensitive words", "sensitive_words_detected", false, false},
+		{"content moderation failed", "content_moderation_failed", false, false},
+		{"contains rate limit but unknown", "not_rate_limit_related", false, false},
+		{"unknown channel code", "channel:param_override_invalid", false, false},
+		{"provider invalid parameter", "InvalidParameter", false, false},
+		{"unknown", "unknown_error", false, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotFailover, gotQuota := classifyErrorCode(tt.code)
+			if gotFailover != tt.wantFailover {
+				t.Errorf("classifyErrorCode(%q) failover = %v, want %v", tt.code, gotFailover, tt.wantFailover)
+			}
+			if gotQuota != tt.wantQuota {
+				t.Errorf("classifyErrorCode(%q) quota = %v, want %v", tt.code, gotQuota, tt.wantQuota)
 			}
 		})
 	}
@@ -324,6 +380,104 @@ func TestClassifyByErrorMessage(t *testing.T) {
 				},
 			},
 			wantFailover: true,
+			wantQuota:    false,
+		},
+		{
+			name: "top level code only - sub2api quota",
+			body: map[string]interface{}{
+				"code":    "API_KEY_QUOTA_EXHAUSTED",
+				"message": "error",
+			},
+			wantFailover: true,
+			wantQuota:    true,
+		},
+		{
+			name: "nested code only - sub2api disabled key",
+			body: map[string]interface{}{
+				"error": map[string]interface{}{
+					"code":    "API_KEY_DISABLED",
+					"message": "error",
+					"type":    "error",
+				},
+			},
+			wantFailover: true,
+			wantQuota:    false,
+		},
+		{
+			name: "nested code only - done-hub quota",
+			body: map[string]interface{}{
+				"error": map[string]interface{}{
+					"code":    "pre_consume_token_quota_failed",
+					"message": "error",
+					"type":    "one_hub_error",
+				},
+			},
+			wantFailover: true,
+			wantQuota:    true,
+		},
+		{
+			name: "gemini status resource exhausted",
+			body: map[string]interface{}{
+				"error": map[string]interface{}{
+					"code":    429,
+					"message": "error",
+					"status":  "RESOURCE_EXHAUSTED",
+				},
+			},
+			wantFailover: true,
+			wantQuota:    true,
+		},
+		{
+			name: "google error info rate limit reason",
+			body: map[string]interface{}{
+				"error": map[string]interface{}{
+					"message": "error",
+					"details": []interface{}{
+						map[string]interface{}{
+							"@type":  "type.googleapis.com/google.rpc.ErrorInfo",
+							"reason": "RATE_LIMIT_EXCEEDED",
+						},
+					},
+				},
+			},
+			wantFailover: true,
+			wantQuota:    true,
+		},
+		{
+			name: "google error info service disabled reason",
+			body: map[string]interface{}{
+				"error": map[string]interface{}{
+					"message": "error",
+					"details": []interface{}{
+						map[string]interface{}{
+							"@type":  "type.googleapis.com/google.rpc.ErrorInfo",
+							"reason": "SERVICE_DISABLED",
+						},
+					},
+				},
+			},
+			wantFailover: true,
+			wantQuota:    false,
+		},
+		{
+			name: "new-api transient code only",
+			body: map[string]interface{}{
+				"error": map[string]interface{}{
+					"code":    "do_request_failed",
+					"message": "error",
+					"type":    "new_api_error",
+				},
+			},
+			wantFailover: true,
+			wantQuota:    false,
+		},
+		{
+			name: "done-hub provider invalid parameter is not retryable",
+			body: map[string]interface{}{
+				"code":    "InvalidParameter",
+				"message": "Role must be user or assistant and Content length must be greater than 0",
+			},
+			wantFailover: false,
 			wantQuota:    false,
 		},
 	}
