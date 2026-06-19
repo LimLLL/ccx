@@ -1,3 +1,19 @@
+## [v2.9.10] - 2026-06-19
+
+### 新增
+
+- **上游认证头覆盖配置** - 后端新增 upstream auth header override，支持按渠道覆盖上游认证头
+- **渠道认证头设置入口** - 前端暴露 channel auth header 设置，支持管理界面配置认证头覆盖
+- **OpenCode Go 预设 x-api-key** - 桌面端 OpenCode Go 预设自动设置 x-api-key 认证头
+
+### 修复
+
+- **模型能力标签简化** - 简化前端 model capability labels，改善模型能力展示文案
+
+### 其他
+
+- **SignPath artifact 安全暂存** - SignPath artifacts 使用安全名称暂存，避免签名流程中的产物名称冲突
+
 ## [v2.9.9] - 2026-06-19
 
 ### 其他
