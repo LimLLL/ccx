@@ -67,7 +67,7 @@ cat .claude/skills/upstream-check/scripts/upstream-state.json
 
 1. 读取 `.claude/skills/upstream-check/scripts/upstream-state.json`，检查远程 tag 是否已在 `seen_tags` 中
 2. 如已在，跳过 TODO 追加
-3. 追加后，将 tag 加入 `seen_tags`（上限 20 条，超出时删除最早的）
+3. 追加后，将 tag 加入 `seen_tags`（上限 5 条，超出时删除最早的）
 
 **TODO.md 更新**：
 
