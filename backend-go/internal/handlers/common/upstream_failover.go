@@ -198,7 +198,7 @@ func TryUpstreamWithAllKeys(
 			RestoreRequestBody(c, attemptBody)
 			c.Set("requestBodyBytes", attemptBody)
 
-			selection, apiKey, err := selectAttemptAPIKey(upstream, failedKeys, failedQuotaGroups, nextAPIKey)
+			selection, apiKey, err := selectAttemptAPIKey(upstream, failedKeys, failedQuotaGroups, redirectedModel, nextAPIKey)
 			if err != nil {
 				lastError = err
 				break // 当前 BaseURL 没有可用 Key，尝试下一个 BaseURL
@@ -517,7 +517,7 @@ func BuildDefaultURLResults(urls []string) []warmup.URLLatencyResult {
 	return results
 }
 
-func selectAttemptAPIKey(upstream *config.UpstreamConfig, failedKeys map[string]bool, failedQuotaGroups map[string]bool, fallback NextAPIKeyFunc) (keypool.Selection, string, error) {
+func selectAttemptAPIKey(upstream *config.UpstreamConfig, failedKeys map[string]bool, failedQuotaGroups map[string]bool, model string, fallback NextAPIKeyFunc) (keypool.Selection, string, error) {
 	if !keypool.HasEffectiveConfig(upstream) {
 		if fallback == nil {
 			return keypool.Selection{}, "", fmt.Errorf("上游 %s 没有可用的API密钥", upstream.Name)
@@ -529,7 +529,7 @@ func selectAttemptAPIKey(upstream *config.UpstreamConfig, failedKeys map[string]
 		return keypool.Selection{APIKey: apiKey}, apiKey, nil
 	}
 
-	for _, candidate := range keypool.Candidates(upstream, failedKeys) {
+	for _, candidate := range keypool.CandidatesForModel(upstream, failedKeys, model) {
 		if candidate.QuotaGroup != "" && failedQuotaGroups[candidate.QuotaGroup] {
 			continue
 		}

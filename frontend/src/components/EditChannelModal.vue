@@ -921,6 +921,7 @@ const form = reactive({
   normalizeSystemRoleToTopLevel: false,
   description: '',
   apiKeys: [] as string[],
+  apiKeyConfigs: undefined as Channel['apiKeyConfigs'],
   modelMapping: {} as Record<string, string>,
   modelCapabilitiesText: '',
   modelCapabilityRows: [] as ModelCapabilityRow[],
@@ -1326,6 +1327,7 @@ const resetForm = () => {
   form.normalizeSystemRoleToTopLevel = false
   form.description = ''
   form.apiKeys = []
+  form.apiKeyConfigs = undefined
   form.modelMapping = {}
   form.modelCapabilitiesText = ''
   form.modelCapabilityRows = []
@@ -1409,6 +1411,7 @@ const loadChannelData = (channel: Channel) => {
 
   // 直接存储原始密钥，不需要映射关系
   form.apiKeys = [...channel.apiKeys]
+  form.apiKeyConfigs = channel.apiKeyConfigs ? channel.apiKeyConfigs.map(cfg => ({ ...cfg })) : undefined
 
   form.modelMapping = { ...(channel.modelMapping || {}) }
   form.modelCapabilitiesText = Object.keys(channel.modelCapabilities || {}).length > 0
@@ -1774,7 +1777,7 @@ const handleCancel = () => {
 const PAYLOAD_KEYS = [
   'name', 'serviceType', 'baseUrl', 'baseUrls', 'website', 'insecureSkipVerify',
   'lowQuality', 'injectDummyThoughtSignature', 'stripThoughtSignature', 'description',
-  'apiKeys', 'modelMapping', 'modelCapabilities', 'defaultCapability', 'allowUnknownContext',
+  'apiKeys', 'apiKeyConfigs', 'modelMapping', 'modelCapabilities', 'defaultCapability', 'allowUnknownContext',
   'reasoningMapping', 'reasoningParamStyle', 'textVerbosity',
   'fastMode', 'customHeaders', 'proxyUrl', 'authHeader', 'requestTimeoutMs', 'responseHeaderTimeoutMs', 'streamFirstContentTimeoutMs', 'streamInactivityTimeoutMs', 'streamToolCallIdleTimeoutMs', 'routePrefix', 'supportedModels',
   'rateLimitRpm', 'rateLimitWindowMinutes', 'rateLimitMaxConcurrent', 'rateLimitAutoFromHeaders',

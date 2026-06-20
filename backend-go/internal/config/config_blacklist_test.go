@@ -219,6 +219,101 @@ func TestBlacklistAndRestoreLogsIncludeTransitionFields(t *testing.T) {
 	}
 }
 
+func TestBlacklistRestorePreservesKeyMetadata(t *testing.T) {
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "config.json")
+	initialConfig := `{
+		"upstream": [{
+			"name": "test-channel",
+			"baseUrl": "https://example.com",
+			"apiKeys": ["sk-a", "sk-b"],
+			"serviceType": "claude",
+			"apiKeyConfigs": [
+				{"key": "sk-a", "name": "primary", "quotaGroup": "account-1", "rateLimitRpm": 20, "rateLimitMaxConcurrent": 2, "weight": 3},
+				{"key": "sk-b", "name": "backup", "quotaGroup": "account-1", "rateLimitRpm": 10}
+			]
+		}]
+	}`
+	if err := os.WriteFile(configPath, []byte(initialConfig), 0644); err != nil {
+		t.Fatalf("写入初始配置失败: %v", err)
+	}
+
+	cm, err := NewConfigManager(configPath, "")
+	if err != nil {
+		t.Fatalf("NewConfigManager() error = %v", err)
+	}
+	cm.CloseWatcher()
+	defer cm.Close()
+
+	// 拉黑 sk-a
+	if err := cm.BlacklistKey("Messages", 0, "sk-a", "authentication_error", "auth failed"); err != nil {
+		t.Fatalf("BlacklistKey() error = %v", err)
+	}
+
+	cfg := cm.GetConfig()
+	up := cfg.Upstream[0]
+
+	// sk-a 应在 DisabledAPIKeys 中，且 Config 快照完整
+	if len(up.DisabledAPIKeys) != 1 {
+		t.Fatalf("len(DisabledAPIKeys) = %d, want 1", len(up.DisabledAPIKeys))
+	}
+	dk := up.DisabledAPIKeys[0]
+	if dk.Config == nil {
+		t.Fatal("DisabledKeyInfo.Config is nil")
+	}
+	if dk.Config.Name != "primary" {
+		t.Fatalf("Config.Name = %q, want primary", dk.Config.Name)
+	}
+	if dk.Config.QuotaGroup != "account-1" {
+		t.Fatalf("Config.QuotaGroup = %q, want account-1", dk.Config.QuotaGroup)
+	}
+	if dk.Config.RateLimitRPM != 20 {
+		t.Fatalf("Config.RateLimitRPM = %d, want 20", dk.Config.RateLimitRPM)
+	}
+	if dk.Config.RateLimitMaxConcurrent != 2 {
+		t.Fatalf("Config.RateLimitMaxConcurrent = %d, want 2", dk.Config.RateLimitMaxConcurrent)
+	}
+	if dk.Config.Weight != 3 {
+		t.Fatalf("Config.Weight = %d, want 3", dk.Config.Weight)
+	}
+
+	// 恢复 sk-a
+	if err := cm.RestoreKey("Messages", 0, "sk-a"); err != nil {
+		t.Fatalf("RestoreKey() error = %v", err)
+	}
+
+	cfg = cm.GetConfig()
+	up = cfg.Upstream[0]
+	if len(up.DisabledAPIKeys) != 0 {
+		t.Fatalf("len(DisabledAPIKeys) = %d after restore, want 0", len(up.DisabledAPIKeys))
+	}
+
+	// 恢复后 apiKeyConfigs 中 sk-a 的 metadata 应完整
+	var restoredCfg *APIKeyConfig
+	for _, c := range up.APIKeyConfigs {
+		if c.Key == "sk-a" {
+			copy := c
+			restoredCfg = &copy
+			break
+		}
+	}
+	if restoredCfg == nil {
+		t.Fatal("sk-a not found in APIKeyConfigs after restore")
+	}
+	if restoredCfg.Name != "primary" {
+		t.Fatalf("restored Name = %q, want primary", restoredCfg.Name)
+	}
+	if restoredCfg.QuotaGroup != "account-1" {
+		t.Fatalf("restored QuotaGroup = %q, want account-1", restoredCfg.QuotaGroup)
+	}
+	if restoredCfg.RateLimitRPM != 20 {
+		t.Fatalf("restored RateLimitRPM = %d, want 20", restoredCfg.RateLimitRPM)
+	}
+	if restoredCfg.Weight != 3 {
+		t.Fatalf("restored Weight = %d, want 3", restoredCfg.Weight)
+	}
+}
+
 func TestValidateChannelKeysSuspendsChatChannelWithoutKeys(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.json")
