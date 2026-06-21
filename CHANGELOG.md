@@ -1,23 +1,64 @@
-## [Unreleased]
+## [v2.9.13] - 2026-06-21
 
-### 修复
+### 新增
 
-- **驾驶舱暂停/熔断状态徽标区分** - 区分暂停与熔断状态 badge 并统一文案
-- **驾驶舱渠道选择交互** - 修复驾驶舱渠道选择交互问题
-- **渠道统计图表交互对齐** - 对齐渠道统计图表交互逻辑
-- **重复 Key 提示** - 添加重复 Key 时给出明确提示
-- **前端 ConversationCard 样式修复** - 修复 Web 端对话卡片展示问题
-- **驾驶舱 auto-resume 容错** - 设置 override 时自动恢复暂停/熔断渠道，resume 幂等容错避免与 setStatus 状态不一致
-- **批量添加 Key 预检** - 批量粘贴 Key 时预检全部重复项，避免遇到第一个重复即停止导致前面已添加的 key 丢失
-
-### 变更
-
+- **子代理感知对话路由与亲和隔离** - 新增 subagent-aware conversation routing 与 affinity isolation，减少不同子代理会话间的路由串扰
+- **额外代理访问密钥** - 支持额外代理访问密钥配置，扩展代理入口鉴权能力
 - **内置模型预设匹配改用正则表达式** - builtin model registry 的 patterns 从简单通配符（`claude-opus-4-7*`）改为显式正则，精确控制前后边界，避免 `gpt-5.4-mini` 被 `gpt-5.4` 误吃、`glm-5.1` 被 `glm-5` 误吃等歧义；支持厂商前缀（`bedrock/claude-opus-4-7`、`xxx-claude-opus-4-7`）和日期版本号后缀（`-20260101`），同时拒绝 `claude-haiku-4-5-with-claude-opus-4-7-fallback` 这类异常组合名
   - 一个 entry 支持多个 pattern（如 `kimi-for-coding` 别名回退到 `kimi-k2.7-code`），未来 Kimi 升级到 K2.8 只需把别名移到新 entry
   - 前端 `channelPayload.ts`、桌面端 `channel-payload.ts` 匹配函数改用 `new RegExp(pattern, 'i')`
   - 后端 `model_registry.go` 新增 `builtinPatternCache` 预编译缓存，RE2 兼容剥离 `(?=$|@)` lookahead 后手动检查边界；`resolvePatternValueFold` 先正则再通配符
   - generator 加构建时正则校验
   - **用户路由级 supportedModels 配置不受影响**，继续用通配符语义
+- **手动暂停与自动熔断区分显示** - UI 区分手动暂停与自动熔断状态展示
+- **images 渠道纳入模型聚合** - 模型列表聚合纳入 images 渠道，并支持多渠道并行收集聚合
+- **Key 权重与模型选择** - Key 池新增 Weight/Models 选择能力，支持 metadata restore 测试并在前端加载 `apiKeyConfigs`
+- **按 Key 凭证池与限速** - 新增 per-key credential pool，支持按 Key 作用域进行限速
+
+### 修复
+
+- **调度器文件拆分冲突修复** - 解决 worktree 合并后的 scheduler file-split 冲突
+- **驾驶舱交互与 Key 管理** - 修复桌面端驾驶舱交互与 Key 管理若干问题
+- **驾驶舱暂停/熔断状态徽标区分** - 区分暂停与熔断状态 badge 并统一文案
+- **驾驶舱渠道选择交互** - 修复驾驶舱渠道选择交互问题
+- **渠道统计图表交互对齐** - 对齐渠道统计图表交互逻辑
+- **重复 Key 提示** - 添加重复 Key 时给出明确提示
+- **桌面 dashboard 控制台交互** - 修复桌面端 dashboard console interactions
+- **Responses 转换保持 Codex 工具兼容** - preserve Codex tool compatibility in responses conversion
+- **Dashboard 渠道编辑弹窗** - 修复桌面端 dashboard 渠道编辑弹窗问题
+- **限速高水位调度优化** - 优化调度器限速高水位策略
+- **渠道统计包含黑名单 Key** - channel stats 纳入 blacklisted keys
+- **渠道编辑对话框高度** - 优化渠道编辑对话框高度
+- **黑名单快照与配置监听** - 加固 blacklist snapshot 与 config watcher
+- **Code review 反馈问题修复** - 修复 code review 确认的 11 个 keypool/ratelimit/config 问题
+- **ChannelView 返回 apiKeyConfigs** - BuildChannelView 返回 `apiKeyConfigs`
+- **模型映射同步后再能力测试** - 前端 capability test 前同步 model mapping
+
+### 重构
+
+- **配置更新逻辑抽取** - 抽取 `applyAPIKeyConfigUpdate` 并改进 watcher 防抖策略
+- **前端活动可视化与单测** - 改进 activity visualization 并补充 unit tests
+- **ChannelOrchestration 样式拆分** - 从 `ChannelOrchestration.vue` 抽取样式
+- **EditChannelModal 样式与优先级逻辑拆分** - 从 `EditChannelModal.vue` 抽取样式和 model-priority 逻辑
+- **App 样式与能力测试组合式函数拆分** - 从 `App.vue` 抽取样式和 capability-test composable
+- **ChannelOrchestration 活动组合式函数抽取** - 抽取 `useChannelActivity` composable
+- **Responses handler 拆分** - 拆分 `handler.go`（2160 行 → 5 个文件）
+- **Chat handler 拆分** - 拆分 `handler.go`（2305 行 → 5 个文件）
+- **Scheduler 测试拆分** - 拆分 `channel_scheduler_test.go`（1650 行 → 3 个文件）
+- **Scheduler 实现拆分** - 拆分 `channel_scheduler.go`（1535 行 → 4 个文件）
+- **通用 stream helper 拆分** - 拆分 `handlers/common/stream.go`（2799 行 → 4 个文件）
+- **Metrics 实现拆分** - 拆分 `channel_metrics.go`（3731 行 → 5 个文件）
+
+### 文档
+
+- **待办事项更新** - 更新 TODO 文档
+
+### 其他
+
+- **额外代理访问密钥合并** - 合并额外代理访问密钥支持
+- **渠道编辑对话框高度修复合并** - 合并渠道编辑对话框高度修复
+- **黑名单 Key 统计修复合并** - 合并 blacklisted key stats fix
+- **Go 格式化** - 执行 go fmt 格式化
 
 ## [v2.9.12] - 2026-06-19
 
