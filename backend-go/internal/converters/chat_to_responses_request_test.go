@@ -83,7 +83,13 @@ func TestConvertResponsesToOpenAIChatRequest(t *testing.T) {
 						"type": "tool_search",
 						"execution": "client",
 						"description": "Search deferred tools",
-						"parameters": {"type": "object", "properties": {}}
+						"parameters": {
+							"type": "object",
+							"properties": {
+								"query": {"type": "string"}
+							},
+							"required": ["query"]
+						}
 					},
 					{
 						"type": "function",
@@ -102,6 +108,12 @@ func TestConvertResponsesToOpenAIChatRequest(t *testing.T) {
 				}
 				if tools[0].Get("function.name").String() != "tool_search" {
 					t.Fatalf("first tool should be tool_search, got %s", tools[0].Raw)
+				}
+				if !tools[0].Get("function.parameters.properties.query").Exists() {
+					t.Fatalf("tool_search should preserve query schema, got %s", tools[0].Raw)
+				}
+				if tools[0].Get("function.parameters.properties.input").Exists() {
+					t.Fatalf("tool_search should not use generic input proxy schema, got %s", tools[0].Raw)
 				}
 				if tools[1].Get("function.name").String() != "get_weather" {
 					t.Fatalf("second tool should be get_weather, got %s", tools[1].Raw)

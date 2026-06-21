@@ -330,8 +330,8 @@ func convertFunctionCallOutputItem(item gjson.Result, out string) string {
 //  1. Codex 新版 Responses 的 tool schema 可能省略 `required` 字段，部分严格
 //     校验 JSONSchema 的上游镜像会报 "None is not of type 'array'"。
 //     转换时统一补齐 `required: []`，并确保 `type: object` 与 `properties: {}`。
-//  2. codexToolCompat 开启时，将 custom / web_search / tool_search / namespace
-//     等 Codex 扩展工具映射为 function proxy。
+//  2. codexToolCompat 开启时，将 custom / web_search / namespace 等 Codex
+//     扩展工具映射为 function proxy；tool_search 保留原始参数 schema 映射为 function。
 //  3. codexToolCompat 关闭时，Responses 的非 function 工具在 Chat Completions 中
 //     没有对应概念，直接跳过，避免触发协议错误。
 func convertToolsToOpenAIFormat(tools gjson.Result, out string, codexToolCompat bool) string {

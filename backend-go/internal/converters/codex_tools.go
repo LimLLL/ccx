@@ -33,10 +33,11 @@ type CodexFunctionToolSpec struct {
 
 // CodexToolContext holds parsed information about all tools in a request.
 type CodexToolContext struct {
-	CustomTools       map[string]CodexCustomToolSpec
-	FunctionTools     map[string]CodexFunctionToolSpec
-	HasCustomTools    bool
-	HasNamespaceTools bool
+	CustomTools             map[string]CodexCustomToolSpec
+	FunctionTools           map[string]CodexFunctionToolSpec
+	HasCustomTools          bool
+	HasNamespaceTools       bool
+	HasBuiltinFunctionTools bool
 }
 
 // BuildCodexToolContext inspects a Responses request's tools array and builds
@@ -102,7 +103,14 @@ func BuildCodexToolContextFromRaw(tools []interface{}) CodexToolContext {
 			ctx.FunctionTools[name] = CodexFunctionToolSpec{Name: name}
 		case "namespace":
 			addNamespaceToolsToContext(&ctx, tool)
-		case "web_search", "local_shell", "computer_use", "tool_search":
+		case "tool_search":
+			name, _ := tool["name"].(string)
+			if name == "" {
+				name = toolType
+			}
+			ctx.FunctionTools[name] = CodexFunctionToolSpec{Name: name}
+			ctx.HasBuiltinFunctionTools = true
+		case "web_search", "local_shell", "computer_use":
 			name, _ := tool["name"].(string)
 			if name == "" {
 				name = toolType
@@ -243,7 +251,7 @@ func ConvertRawToolsToOpenAI(tools []interface{}) []map[string]interface{} {
 }
 
 func responsesRawToolsToOpenAIWithContext(tools []interface{}, ctx CodexToolContext) []map[string]interface{} {
-	if !ctx.HasCustomTools && !ctx.HasNamespaceTools {
+	if !ctx.HasCustomTools && !ctx.HasNamespaceTools && !ctx.HasBuiltinFunctionTools {
 		return responsesRawToolsToOpenAI(tools)
 	}
 
@@ -279,7 +287,9 @@ func responsesRawToolsToOpenAIWithContext(tools []interface{}, ctx CodexToolCont
 			openaiTools = append(openaiTools, ot)
 		case "namespace":
 			openaiTools = append(openaiTools, namespaceToolsToOpenAI(tool, ctx)...)
-		case "custom", "web_search", "local_shell", "computer_use", "tool_search":
+		case "tool_search":
+			openaiTools = append(openaiTools, builtinFunctionProxyTool(tool, toolType))
+		case "custom", "web_search", "local_shell", "computer_use":
 			name, _ := tool["name"].(string)
 			if name == "" {
 				name = toolType
@@ -309,6 +319,31 @@ func responsesRawToolsToOpenAIWithContext(tools []interface{}, ctx CodexToolCont
 	}
 
 	return openaiTools
+}
+
+func builtinFunctionProxyTool(tool map[string]interface{}, defaultName string) map[string]interface{} {
+	name, _ := tool["name"].(string)
+	if name == "" {
+		name = defaultName
+	}
+	description, _ := tool["description"].(string)
+	parameters := tool["parameters"]
+	if parameters == nil {
+		parameters = defaultResponsesToolParameters()
+	} else {
+		parameters = sanitizeResponsesToolParameters(parameters)
+	}
+	function := map[string]interface{}{
+		"name":       name,
+		"parameters": parameters,
+	}
+	if description != "" {
+		function["description"] = description
+	}
+	return map[string]interface{}{
+		"type":     "function",
+		"function": function,
+	}
 }
 
 // namespaceToolsToOpenAI converts a namespace tool into OpenAI function tools.

@@ -179,6 +179,33 @@ func TestConvertOpenAIChatToResponses_CustomToolCall(t *testing.T) {
 	}
 }
 
+func TestConvertOpenAIChatToResponses_ToolSearchRemainsFunctionCall(t *testing.T) {
+	ctx := context.Background()
+	sseLines := []string{
+		`data: {"id":"chatcmpl-tool-search","object":"chat.completion.chunk","created":1234567890,"model":"gpt-4o","choices":[{"index":0,"delta":{"role":"assistant","tool_calls":[{"index":0,"id":"call_search","type":"function","function":{"name":"tool_search","arguments":""}}]},"finish_reason":null}]}`,
+		`data: {"id":"chatcmpl-tool-search","object":"chat.completion.chunk","created":1234567890,"model":"gpt-4o","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\"query\":\"sub-agent\"}"}}]},"finish_reason":null}]}`,
+		`data: {"id":"chatcmpl-tool-search","object":"chat.completion.chunk","created":1234567890,"model":"gpt-4o","choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}`,
+		`data: [DONE]`,
+	}
+	originalReq := []byte(`{"model":"gpt-4o","input":"find tools","tools":[{"type":"tool_search","execution":"client","parameters":{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}}],"transformer_metadata":{"codex_tool_compat_enabled":true}}`)
+
+	var state any
+	var allEvents []string
+	for _, line := range sseLines {
+		allEvents = append(allEvents, ConvertOpenAIChatToResponses(ctx, "gpt-4o", originalReq, nil, []byte(line), &state)...)
+	}
+	joined := strings.Join(allEvents, "\n")
+	if strings.Contains(joined, `"type":"custom_tool_call"`) {
+		t.Fatalf("tool_search must not be remapped to custom_tool_call: %s", joined)
+	}
+	if !strings.Contains(joined, `"type":"function_call"`) || !strings.Contains(joined, `"name":"tool_search"`) {
+		t.Fatalf("missing function_call tool_search item: %s", joined)
+	}
+	if !strings.Contains(joined, "response.function_call_arguments.done") {
+		t.Fatalf("missing function call arguments done event: %s", joined)
+	}
+}
+
 func TestConvertOpenAIChatToResponses_Stream_ClaudeCacheTotalTokens(t *testing.T) {
 	ctx := context.Background()
 	sseLines := []string{
