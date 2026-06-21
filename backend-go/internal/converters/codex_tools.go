@@ -108,7 +108,8 @@ func BuildCodexToolContextFromRaw(tools []interface{}) CodexToolContext {
 			if name == "" {
 				name = toolType
 			}
-			ctx.FunctionTools[name] = CodexFunctionToolSpec{Name: name}
+			ctx.CustomTools[name] = CodexCustomToolSpec{OpenAIName: name, Kind: CodexCustomToolBuiltIn}
+			ctx.HasCustomTools = true
 			ctx.HasBuiltinFunctionTools = true
 		case "web_search", "local_shell", "computer_use":
 			name, _ := tool["name"].(string)
@@ -903,6 +904,11 @@ func ReconstructCustomToolCallInput(ctx CodexToolContext, upstreamName, rawArgum
 			action = proxyActionFromUpstreamName(upstreamName)
 		}
 		return ApplyPatchInputFromProxyArguments(rawArguments, action)
+	case CodexCustomToolBuiltIn:
+		if spec.OpenAIName == "tool_search" || upstreamName == "tool_search" {
+			return rawArguments
+		}
+		fallthrough
 	default:
 		var parsed map[string]interface{}
 		if err := json.Unmarshal([]byte(rawArguments), &parsed); err != nil {
@@ -956,6 +962,11 @@ func BuildCustomToolCallHistoryArguments(ctx CodexToolContext, originalName, inp
 			return spec.OpenAIName + "_" + action, buildSingleOpArgsJSON(ops[0])
 		}
 		return spec.OpenAIName + "_batch", buildBatchOpsJSON(ops)
+	case CodexCustomToolBuiltIn:
+		if spec.OpenAIName == "tool_search" || originalName == "tool_search" {
+			return spec.OpenAIName, input
+		}
+		fallthrough
 	default:
 		argsJSON, _ := json.Marshal(map[string]interface{}{"input": input})
 		return spec.OpenAIName, string(argsJSON)

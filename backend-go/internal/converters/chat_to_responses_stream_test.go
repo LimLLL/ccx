@@ -179,7 +179,7 @@ func TestConvertOpenAIChatToResponses_CustomToolCall(t *testing.T) {
 	}
 }
 
-func TestConvertOpenAIChatToResponses_ToolSearchRemainsFunctionCall(t *testing.T) {
+func TestConvertOpenAIChatToResponses_ToolSearchRestoresCustomToolCall(t *testing.T) {
 	ctx := context.Background()
 	sseLines := []string{
 		`data: {"id":"chatcmpl-tool-search","object":"chat.completion.chunk","created":1234567890,"model":"gpt-4o","choices":[{"index":0,"delta":{"role":"assistant","tool_calls":[{"index":0,"id":"call_search","type":"function","function":{"name":"tool_search","arguments":""}}]},"finish_reason":null}]}`,
@@ -195,14 +195,17 @@ func TestConvertOpenAIChatToResponses_ToolSearchRemainsFunctionCall(t *testing.T
 		allEvents = append(allEvents, ConvertOpenAIChatToResponses(ctx, "gpt-4o", originalReq, nil, []byte(line), &state)...)
 	}
 	joined := strings.Join(allEvents, "\n")
-	if strings.Contains(joined, `"type":"custom_tool_call"`) {
-		t.Fatalf("tool_search must not be remapped to custom_tool_call: %s", joined)
+	if !strings.Contains(joined, `"type":"custom_tool_call"`) || !strings.Contains(joined, `"name":"tool_search"`) {
+		t.Fatalf("missing custom_tool_call tool_search item: %s", joined)
 	}
-	if !strings.Contains(joined, `"type":"function_call"`) || !strings.Contains(joined, `"name":"tool_search"`) {
-		t.Fatalf("missing function_call tool_search item: %s", joined)
+	if strings.Contains(joined, "response.function_call_arguments.done") {
+		t.Fatalf("tool_search should not be returned as a function_call: %s", joined)
 	}
-	if !strings.Contains(joined, "response.function_call_arguments.done") {
-		t.Fatalf("missing function call arguments done event: %s", joined)
+	if !strings.Contains(joined, "response.custom_tool_call_input.delta") {
+		t.Fatalf("missing custom tool input delta event: %s", joined)
+	}
+	if !strings.Contains(joined, `{\"query\":\"sub-agent\"}`) {
+		t.Fatalf("tool_search input should preserve query arguments: %s", joined)
 	}
 }
 

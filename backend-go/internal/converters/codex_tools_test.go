@@ -740,18 +740,21 @@ func TestBuildCodexToolContext_ToolSearch(t *testing.T) {
 
 	ctx := BuildCodexToolContextFromRaw(tools)
 
-	if ctx.HasCustomTools {
-		t.Fatal("tool_search should not be treated as a custom tool")
+	if !ctx.HasCustomTools {
+		t.Fatal("tool_search should be remapped back as a custom tool for Codex clients")
 	}
 	if !ctx.HasBuiltinFunctionTools {
 		t.Fatal("HasBuiltinFunctionTools should be true when tool_search is present")
 	}
-	spec, ok := ctx.FunctionTools["tool_search"]
+	spec, ok := ctx.CustomTools["tool_search"]
 	if !ok {
-		t.Fatal("missing tool_search entry in FunctionTools")
+		t.Fatal("missing tool_search entry in CustomTools")
 	}
-	if spec.Name != "tool_search" {
-		t.Fatalf("Name = %q, want %q", spec.Name, "tool_search")
+	if spec.OpenAIName != "tool_search" {
+		t.Fatalf("OpenAIName = %q, want %q", spec.OpenAIName, "tool_search")
+	}
+	if spec.Kind != CodexCustomToolBuiltIn {
+		t.Fatalf("Kind = %q, want %q", spec.Kind, CodexCustomToolBuiltIn)
 	}
 }
 
@@ -802,5 +805,36 @@ func TestToolSearchConvertsToOpenAIFunction(t *testing.T) {
 	}
 	if _, ok := params["properties"].(map[string]interface{})["input"]; ok {
 		t.Fatalf("tool_search should preserve structured schema, got generic input schema: %#v", params)
+	}
+}
+
+func TestToolSearchCustomHistoryPreservesArguments(t *testing.T) {
+	ctx := BuildCodexToolContextFromRaw([]interface{}{
+		map[string]interface{}{
+			"type": "tool_search",
+			"parameters": map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"query": map[string]interface{}{"type": "string"},
+					"limit": map[string]interface{}{"type": "number"},
+				},
+			},
+		},
+	})
+
+	input := `{"limit":8,"query":"multi-agent"}`
+	if got := ReconstructCustomToolCallInput(ctx, "tool_search", input); got != input {
+		t.Fatalf("ReconstructCustomToolCallInput() = %q, want %q", got, input)
+	}
+
+	name, args := BuildCustomToolCallHistoryArguments(ctx, "tool_search", input)
+	if name != "tool_search" {
+		t.Fatalf("name = %q, want tool_search", name)
+	}
+	if args != input {
+		t.Fatalf("args = %q, want %q", args, input)
+	}
+	if strings.Contains(args, `"input"`) {
+		t.Fatalf("tool_search history args should not be wrapped in input: %s", args)
 	}
 }
