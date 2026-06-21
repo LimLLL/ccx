@@ -906,7 +906,7 @@ func ReconstructCustomToolCallInput(ctx CodexToolContext, upstreamName, rawArgum
 		return ApplyPatchInputFromProxyArguments(rawArguments, action)
 	case CodexCustomToolBuiltIn:
 		if spec.OpenAIName == "tool_search" || upstreamName == "tool_search" {
-			return rawArguments
+			return normalizeToolSearchInput(rawArguments)
 		}
 		fallthrough
 	default:
@@ -964,7 +964,7 @@ func BuildCustomToolCallHistoryArguments(ctx CodexToolContext, originalName, inp
 		return spec.OpenAIName + "_batch", buildBatchOpsJSON(ops)
 	case CodexCustomToolBuiltIn:
 		if spec.OpenAIName == "tool_search" || originalName == "tool_search" {
-			return spec.OpenAIName, input
+			return spec.OpenAIName, normalizeToolSearchInput(input)
 		}
 		fallthrough
 	default:
@@ -1215,9 +1215,34 @@ func customToolInputFromItem(item types.ResponsesItem) string {
 	return ""
 }
 
+func normalizeToolSearchInput(input string) string {
+	var wrapper map[string]interface{}
+	if err := json.Unmarshal([]byte(input), &wrapper); err != nil {
+		return input
+	}
+	if _, ok := wrapper["query"]; ok {
+		return input
+	}
+	if _, ok := wrapper["limit"]; ok {
+		return input
+	}
+	inner, ok := wrapper["input"].(string)
+	if !ok {
+		return input
+	}
+	var parsedInner map[string]interface{}
+	if err := json.Unmarshal([]byte(inner), &parsedInner); err != nil {
+		return input
+	}
+	return inner
+}
+
 // replayCustomToolCall converts a custom_tool_call input for history replay without CodexToolContext.
 // It detects apply_patch by name and content, and returns (upstreamName, argsJSON).
 func replayCustomToolCall(name, input string) (string, string) {
+	if name == "tool_search" {
+		return name, normalizeToolSearchInput(input)
+	}
 	if name == "apply_patch" || (strings.HasPrefix(input, "*** Begin Patch") && strings.Contains(input, "*** End Patch")) {
 		ops, ok := ParseApplyPatchOperations(input)
 		if !ok || len(ops) == 0 {

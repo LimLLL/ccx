@@ -50,3 +50,38 @@ func TestOpenAIChatConverter_ReplaysCustomToolCallInput(t *testing.T) {
 		t.Fatalf("tool output message = %#v", messages[1])
 	}
 }
+
+func TestOpenAIChatConverter_ReplaysToolSearchCustomToolCallInput(t *testing.T) {
+	req := &types.ResponsesRequest{
+		Model: "gpt-4o",
+		Input: []types.ResponsesItem{
+			{
+				Type:   "custom_tool_call",
+				CallID: "call_search",
+				Name:   "tool_search",
+				Input:  `{"input":"{\"limit\":8,\"query\":\"multi-agent\"}"}`,
+			},
+			{
+				Type:   "custom_tool_call_output",
+				CallID: "call_search",
+				Output: "aborted",
+			},
+		},
+	}
+
+	converted, err := (&OpenAIChatConverter{}).ToProviderRequest(&session.Session{}, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := converted.(map[string]interface{})
+	messages := body["messages"].([]map[string]interface{})
+	toolCalls := messages[0]["tool_calls"].([]map[string]interface{})
+	function := toolCalls[0]["function"].(map[string]interface{})
+
+	if function["name"] != "tool_search" {
+		t.Fatalf("function name = %v, want tool_search", function["name"])
+	}
+	if got := function["arguments"].(string); got != `{"limit":8,"query":"multi-agent"}` {
+		t.Fatalf("arguments = %s", got)
+	}
+}

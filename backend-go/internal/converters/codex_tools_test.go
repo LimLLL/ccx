@@ -837,4 +837,13 @@ func TestToolSearchCustomHistoryPreservesArguments(t *testing.T) {
 	if strings.Contains(args, `"input"`) {
 		t.Fatalf("tool_search history args should not be wrapped in input: %s", args)
 	}
+
+	wrappedInput := `{"input":"{\"limit\":8,\"query\":\"multi-agent\"}"}`
+	if got := ReconstructCustomToolCallInput(ctx, "tool_search", wrappedInput); got != input {
+		t.Fatalf("wrapped ReconstructCustomToolCallInput() = %q, want %q", got, input)
+	}
+	_, args = BuildCustomToolCallHistoryArguments(ctx, "tool_search", wrappedInput)
+	if args != input {
+		t.Fatalf("wrapped tool_search history args = %q, want %q", args, input)
+	}
 }
