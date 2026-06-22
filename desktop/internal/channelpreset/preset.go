@@ -151,9 +151,9 @@ var providerConsoleURLs = map[string]string{
 // defaultTargets 返回标准的三目标配置（Messages、Responses、Chat），Messages 默认推荐。
 func defaultTargets() []ChannelTarget {
 	return []ChannelTarget{
-		{Type: TargetMessages, Label: "Messages 原生透传", Description: "Claude Code 直连或 CCX messages 渠道", Recommended: true},
-		{Type: TargetResponses, Label: "Codex Responses", Description: "OpenAI Responses 协议，供 Codex 使用"},
-		{Type: TargetChat, Label: "Chat 渠道透传", Description: "OpenAI Chat 协议，供 Chat 客户端使用"},
+		{Type: TargetMessages, Label: "Claude Messages", Description: "Claude native Messages protocol, supports Claude Code direct or via CCX proxy", Recommended: true},
+		{Type: TargetResponses, Label: "Codex Responses", Description: "OpenAI Responses protocol, for Codex CLI and compatible clients"},
+		{Type: TargetChat, Label: "OpenAI Chat", Description: "OpenAI Chat Completions protocol, compatible with various Chat clients and third-party tools"},
 	}
 }
 
