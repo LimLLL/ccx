@@ -330,7 +330,7 @@ function fromSelectValue(value: string): ReasoningEffort | '' {
 
     <div class="space-y-3 rounded-xl border border-primary/20 bg-primary/[0.02] p-4">
       <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_auto] items-end gap-3">
-        <div class="relative min-w-0 space-y-1" data-target-model-picker>
+        <div class="relative min-w-0 space-y-1" data-source-model-picker>
           <Label class="text-xs font-semibold text-muted-foreground">
             {{ t('channelEditor.mapping.source.label') }}
           </Label>

@@ -208,7 +208,7 @@ function hideTargetDropdown() {
 
 function handlePointerDown(e: PointerEvent) {
   const target = e.target as Element | null
-  if (target?.closest('[data-target-model-picker]')) return
+  if (target?.closest('[data-target-model-picker]') || target?.closest('[data-source-model-picker]')) return
   hideTargetDropdown()
   hideSourceDropdown()
 }
