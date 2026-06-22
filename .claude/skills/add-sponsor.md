@@ -241,11 +241,11 @@ var providerConsoleURLs = map[string]string{
         {ID: "openai-chat", Label: "OpenAI-compatible", BaseURL: "https://new-sponsor.com/v1", Description: "OpenAI Chat 兼容入口", Recommended: true},
     },
     Targets: []ChannelTarget{
-        {Type: TargetChat, Label: "Chat 渠道透传", Description: "OpenAI Chat 协议", Recommended: true},
-        {Type: TargetResponses, Label: "Codex Responses", Description: "OpenAI Responses 协议"},
-        {Type: TargetMessages, Label: "Messages 原生透传", Description: "通过 CCX messages 渠道使用"},
+        {Type: TargetMessages, Label: "Messages 原生透传", Description: "Claude Code 直连或 CCX messages 渠道", Recommended: true},
+        {Type: TargetResponses, Label: "Codex Responses", Description: "OpenAI Responses 协议，供 Codex 使用"},
+        {Type: TargetChat, Label: "Chat 渠道透传", Description: "OpenAI Chat 协议，供 Chat 客户端使用"},
     },
-    DefaultTarget: TargetChat,
+    DefaultTarget: TargetMessages,
 }
 ```
 
@@ -322,11 +322,12 @@ feat(sponsors): add <SponsorName> sponsor integration
 ## 注意事项
 
 1. **严格遵守赞助商顺序**：所有文件中的顺序必须一致
-2. **图标格式**：建议使用 JPG 格式，尺寸约 120x120 像素
-3. **URL 格式**：确保所有 URL 格式统一，去除尾部斜杠
-4. **国际化**：中英文翻译都要提供
-5. **Base URL 选择**：根据赞助商主要支持的协议选择合适的默认 Target
-6. **Order 值**：按 10 的倍数递增，便于后续插入
+2. **Targets 顺序固定**：必须按照 **Messages → Responses → Chat** 的顺序排列，不能颠倒
+3. **图标格式**：建议使用 JPG 格式，尺寸约 120x120 像素
+4. **URL 格式**：确保所有 URL 格式统一，去除尾部斜杠
+5. **国际化**：中英文翻译都要提供
+6. **Base URL 选择**：根据赞助商主要支持的协议选择合适的默认 Target
+7. **Order 值**：按 10 的倍数递增，便于后续插入
 
 ## 常见问题
 

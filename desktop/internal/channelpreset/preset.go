@@ -249,11 +249,11 @@ func Presets() []ProviderPreset {
 				{ID: "openai-chat", Label: "OpenAI-compatible", BaseURL: "https://unity2.ai/v1", Description: "OpenAI Chat 兼容入口", Recommended: true},
 			},
 			Targets: []ChannelTarget{
-				{Type: TargetChat, Label: "Chat 渠道透传", Description: "OpenAI Chat 协议，供 Chat 客户端使用", Recommended: true},
+				{Type: TargetMessages, Label: "Messages 原生透传", Description: "Claude Code 直连或 CCX messages 渠道", Recommended: true},
 				{Type: TargetResponses, Label: "Codex Responses", Description: "OpenAI Responses 协议，供 Codex 使用"},
-				{Type: TargetMessages, Label: "Messages 原生透传", Description: "通过 CCX messages 渠道使用"},
+				{Type: TargetChat, Label: "Chat 渠道透传", Description: "OpenAI Chat 协议，供 Chat 客户端使用"},
 			},
-			DefaultTarget: TargetChat,
+			DefaultTarget: TargetMessages,
 		},
 		{
 			ID:                  ProviderKimi,
