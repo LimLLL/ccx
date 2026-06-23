@@ -32,6 +32,7 @@
   "nav.envDesc": "Edit gateway env file",
   "nav.dashboard": "Dashboard",
   "nav.dashboardDesc": "Native management dashboard",
+  "sidebar.managementSection": "Management",
   "tab.statusTitle": "Gateway Status",
   "tab.agentTitle": "Agent Config",
   "tab.channelsTitle": "Channels Console",

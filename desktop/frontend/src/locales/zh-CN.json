@@ -32,6 +32,7 @@
   "nav.envDesc": "网关配置文件编辑",
   "nav.dashboard": "管理面板",
   "nav.dashboardDesc": "原生管理面板",
+  "sidebar.managementSection": "管理",
   "tab.statusTitle": "网关状态监控",
   "tab.agentTitle": "Agent 代理配置",
   "tab.channelsTitle": "渠道管理控制台",

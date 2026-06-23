@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, type Component } from 'vue'
 import { useStatus } from '@/composables/useStatus'
 import { useLanguage } from '@/composables/useLanguage'
 import { useReleaseCheck } from '@/composables/useReleaseCheck'
@@ -67,14 +67,24 @@ onMounted(async () => {
   }
 })
 
-const menuItems = computed(() => [
+type MenuItem = {
+  id: TabValue
+  label: string
+  icon: Component
+  desc: string
+}
+
+const menuItems = computed<MenuItem[]>(() => [
   { id: 'status', label: t('nav.status'), icon: Activity, desc: t('nav.statusDesc') },
   { id: 'agent', label: t('nav.agent'), icon: Settings, desc: t('nav.agentDesc') },
   { id: 'channels', label: t('nav.channels'), icon: Network, desc: t('nav.channelsDesc') },
   { id: 'env', label: t('nav.env'), icon: Sliders, desc: t('nav.envDesc') },
   { id: 'dashboard', label: t('nav.dashboard'), icon: LayoutDashboard, desc: t('nav.dashboardDesc') },
-  { id: 'cockpit', label: t('nav.cockpit'), icon: Kanban, desc: t('nav.cockpitDesc') }
-] as const)
+  { id: 'cockpit', label: t('nav.cockpit'), icon: Kanban, desc: t('nav.cockpitDesc') },
+])
+
+const primaryMenuItems = computed(() => menuItems.value.slice(0, 4))
+const managementMenuItems = computed(() => menuItems.value.slice(4))
 
 const statusLabel = computed(() => {
   if (status.value.running) return t('common.serviceHealthy')
@@ -113,38 +123,74 @@ const handleDaemonAction = async () => {
     </div>
 
     <!-- 导航菜单 -->
-    <nav class="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto">
-      <button
-        v-for="item in menuItems"
-        :key="item.id"
-        @click="modelValue = item.id"
-        :class="[
-          'w-full flex items-center gap-3.5 px-4 py-3 rounded-lg text-left transition-all duration-300 relative group overflow-hidden',
-          modelValue === item.id
-            ? 'bg-primary/10 text-primary border border-primary/15'
-            : 'text-muted-foreground hover:text-foreground hover:bg-secondary border border-transparent'
-        ]"
-      >
-        <!-- 侧栏滑块小霓虹指示器 -->
-        <div
-          v-if="modelValue === item.id"
-          class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-primary shadow-[0_0_10px_rgba(59,130,246,0.6)]"
-        />
-
-        <component
-          :is="item.icon"
+    <nav class="flex-1 px-3 py-6 overflow-y-auto">
+      <div class="space-y-1.5">
+        <button
+          v-for="item in primaryMenuItems"
+          :key="item.id"
+          @click="modelValue = item.id"
           :class="[
-            'w-4.5 h-4.5 shrink-0 transition-transform duration-300 group-hover:scale-110',
-            modelValue === item.id ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+            'w-full flex items-center gap-3.5 px-4 py-3 rounded-lg text-left transition-all duration-300 relative group overflow-hidden',
+            modelValue === item.id
+              ? 'bg-primary/10 text-primary border border-primary/15'
+              : 'text-muted-foreground hover:text-foreground hover:bg-secondary border border-transparent'
           ]"
-        />
-        <div class="flex flex-col min-w-0">
-          <span class="text-sm font-medium leading-tight">{{ item.label }}</span>
-          <span class="text-[10px] text-muted-foreground mt-0.5 truncate group-hover:text-foreground transition-colors">
-            {{ item.desc }}
-          </span>
-        </div>
-      </button>
+        >
+          <div
+            v-if="modelValue === item.id"
+            class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-primary shadow-[0_0_10px_rgba(59,130,246,0.6)]"
+          />
+
+          <component
+            :is="item.icon"
+            :class="[
+              'w-4.5 h-4.5 shrink-0 transition-transform duration-300 group-hover:scale-110',
+              modelValue === item.id ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+            ]"
+          />
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-medium leading-tight">{{ item.label }}</span>
+            <span class="text-[10px] text-muted-foreground mt-0.5 truncate group-hover:text-foreground transition-colors">
+              {{ item.desc }}
+            </span>
+          </div>
+        </button>
+      </div>
+
+      <div class="my-0.5 border-t border-border/60" />
+
+      <div class="space-y-1.5">
+        <button
+          v-for="item in managementMenuItems"
+          :key="item.id"
+          @click="modelValue = item.id"
+          :class="[
+            'w-full flex items-center gap-3.5 px-4 py-3 rounded-lg text-left transition-all duration-300 relative group overflow-hidden',
+            modelValue === item.id
+              ? 'bg-primary/10 text-primary border border-primary/15'
+              : 'text-muted-foreground hover:text-foreground hover:bg-secondary border border-transparent'
+          ]"
+        >
+          <div
+            v-if="modelValue === item.id"
+            class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-primary shadow-[0_0_10px_rgba(59,130,246,0.6)]"
+          />
+
+          <component
+            :is="item.icon"
+            :class="[
+              'w-4.5 h-4.5 shrink-0 transition-transform duration-300 group-hover:scale-110',
+              modelValue === item.id ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+            ]"
+          />
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm font-medium leading-tight">{{ item.label }}</span>
+            <span class="text-[10px] text-muted-foreground mt-0.5 truncate group-hover:text-foreground transition-colors">
+              {{ item.desc }}
+            </span>
+          </div>
+        </button>
+      </div>
     </nav>
 
     <!-- 底部常驻迷你服务守护面板 -->
