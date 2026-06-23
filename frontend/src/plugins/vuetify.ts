@@ -168,6 +168,7 @@ import {
   mdiChartTimelineVariant,
   mdiChartAreaspline,
   mdiChartLine,
+  mdiViewDashboardOutline,
   mdiCodeBraces,
   mdiDatabase,
   mdiSignature,
@@ -373,6 +374,7 @@ const iconMap: Record<string, string> = {
   'chart-areaspline': mdiChartAreaspline,
   'chart-line': mdiChartLine,
   'chart-line-variant': mdiChartLineVariant,
+  'view-dashboard-outline': mdiViewDashboardOutline,
   'code-braces': mdiCodeBraces,
   'database': mdiDatabase,
 
