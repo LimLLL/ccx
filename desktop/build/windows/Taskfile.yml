@@ -34,6 +34,34 @@ tasks:
       GOARCH: '{{.ARCH}}'
       PRODUCTION: '{{.PRODUCTION | default "false"}}'
 
+  build:dev:
+    summary: Builds the development application shell for Windows
+    deps:
+      - task: common:ensure:frontend:dist
+      - task: common:generate:bindings
+        vars:
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
+      - task: common:generate:icons
+    cmds:
+      - task: generate:syso
+        vars:
+          ARCH:
+            ref: .ARCH
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}.exe
+      - cmd: powershell Remove-item *.syso
+        platforms: [windows]
+      - cmd: rm -f *.syso
+        platforms: [linux, darwin]
+    vars:
+      VERSION_LDFLAGS: '-X main.Version={{.BUILD_VERSION | default "dev"}} -X main.BuildTime={{.BUILD_TIME | default "unknown"}} -X main.GitCommit={{.GIT_COMMIT | default "unknown"}} -X main.Distribution={{.DISTRIBUTION | default "github"}}'
+      BUILD_FLAGS: '-buildvcs=false -gcflags=all="-l" -ldflags="{{.VERSION_LDFLAGS}}"'
+    env:
+      GOOS: windows
+      CGO_ENABLED: 0
+      GOARCH: '{{.ARCH}}'
+      PRODUCTION: "false"
+
   package:
     summary: Packages a production build of the application
     cmds:

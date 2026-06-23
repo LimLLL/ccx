@@ -22,6 +22,14 @@ tasks:
     cmds:
       - bun install
 
+  ensure:frontend:dist:
+    summary: Ensures embedded frontend assets exist for development builds
+    cmds:
+      - cmd: mkdir -p frontend/dist && cp -R frontend/public/. frontend/dist/ && test -f frontend/dist/index.html || printf '<!doctype html><html><head><meta charset="UTF-8"><title>CCX Desktop</title></head><body><div id="app"></div></body></html>\n' > frontend/dist/index.html
+        platforms: [darwin, linux]
+      - cmd: powershell -NoProfile -Command "New-Item -ItemType Directory -Force frontend/dist | Out-Null; Copy-Item frontend/public/* frontend/dist -Recurse -Force; if (!(Test-Path frontend/dist/index.html)) { Set-Content -Path frontend/dist/index.html -Value '<!doctype html><html><head><meta charset=\"UTF-8\"><title>CCX Desktop</title></head><body><div id=\"app\"></div></body></html>' }"
+        platforms: [windows]
+
   build:frontend:
     label: build:frontend (PRODUCTION={{.PRODUCTION}})
     summary: Build the frontend project

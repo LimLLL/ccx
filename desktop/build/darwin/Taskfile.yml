@@ -31,6 +31,31 @@ tasks:
       MACOSX_DEPLOYMENT_TARGET: "10.15"
       PRODUCTION: '{{.PRODUCTION | default "false"}}'
 
+  build:dev:
+    summary: Creates a development build of the application shell
+    deps:
+      - task: common:ensure:frontend:dist
+      - task: common:generate:bindings
+        vars:
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
+      - task: common:generate:icons
+    cmds:
+      - go build {{.BUILD_FLAGS}} -o {{.OUTPUT}}
+    vars:
+      VERSION_LDFLAGS: '-X main.Version={{.BUILD_VERSION | default "dev"}} -X main.BuildTime={{.BUILD_TIME | default "unknown"}} -X main.GitCommit={{.GIT_COMMIT | default "unknown"}}'
+      BUILD_FLAGS: '-buildvcs=false -gcflags=all="-l" -ldflags="{{.VERSION_LDFLAGS}}"'
+      DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
+      OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
+    env:
+      GOOS: darwin
+      CGO_ENABLED: 1
+      GOARCH: '{{.ARCH | default ARCH}}'
+      CGO_CFLAGS: "-mmacosx-version-min=10.15"
+      CGO_LDFLAGS: "-mmacosx-version-min=10.15"
+      MACOSX_DEPLOYMENT_TARGET: "10.15"
+      PRODUCTION: "false"
+
   build:universal:
     summary: Builds darwin universal binary (arm64 + amd64)
     deps:

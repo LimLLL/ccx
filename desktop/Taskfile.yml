@@ -17,6 +17,11 @@ tasks:
     cmds:
       - task: "{{OS}}:build"
 
+  build:dev:
+    summary: Builds the development application shell without rebuilding frontend assets
+    cmds:
+      - task: "{{OS}}:build:dev"
+
   package:
     summary: Packages a production build of the application
     cmds:

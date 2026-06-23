@@ -26,6 +26,26 @@ tasks:
       GOARCH: '{{.ARCH | default ARCH}}'
       PRODUCTION: '{{.PRODUCTION | default "false"}}'
 
+  build:dev:
+    summary: Builds the development application shell for Linux
+    deps:
+      - task: common:ensure:frontend:dist
+      - task: common:generate:bindings
+        vars:
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
+      - task: common:generate:icons
+    cmds:
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}
+    vars:
+      VERSION_LDFLAGS: '-X main.Version={{.BUILD_VERSION | default "dev"}} -X main.BuildTime={{.BUILD_TIME | default "unknown"}} -X main.GitCommit={{.GIT_COMMIT | default "unknown"}}'
+      BUILD_FLAGS: '-buildvcs=false -gcflags=all="-l" -ldflags="{{.VERSION_LDFLAGS}}"'
+    env:
+      GOOS: linux
+      CGO_ENABLED: 1
+      GOARCH: '{{.ARCH | default ARCH}}'
+      PRODUCTION: "false"
+
   package:
     summary: Packages a production build of the application for Linux
     deps:
