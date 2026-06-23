@@ -31,14 +31,6 @@ vi.mock('@/components/console/ChannelManager.vue', () => ({
   }),
 }))
 
-vi.mock('@/components/console/ConversationDashboard.vue', () => ({
-  default: defineComponent({
-    setup() {
-      return () => h('button', { type: 'button', 'data-testid': 'conversation-dashboard' }, 'conversations')
-    },
-  }),
-}))
-
 describe('ConsoleTab', () => {
   let root: HTMLDivElement
   let errors: unknown[]
@@ -63,7 +55,7 @@ describe('ConsoleTab', () => {
     errors.push(event.reason)
   }
 
-  it('switches dashboard panels without keeping the inactive panel mounted', async () => {
+  it('keeps management dashboard scoped to channel protocol tabs', async () => {
     const updates: string[] = []
     const app = createApp(ConsoleTab, {
       selection: '/channels/messages',
@@ -76,23 +68,7 @@ describe('ConsoleTab', () => {
     await nextTick()
 
     expect(root.querySelector('[data-testid="channel-manager"]')?.textContent).toBe('channel:messages')
-    expect(root.querySelector('[data-testid="conversation-dashboard"]')).toBeNull()
-
-    const conversationsButton = findButton('app.tabs.conversations')
-    conversationsButton.click()
-    await nextTick()
-
-    expect(updates).toContain('/conversations')
-    expect(root.querySelector('[data-testid="conversation-dashboard"]')?.textContent).toBe('conversations')
-    expect(root.querySelector('[data-testid="channel-manager"]')).toBeNull()
-
-    const channelsButton = findButton('app.tabs.messages')
-    channelsButton.click()
-    await nextTick()
-
-    expect(updates.at(-1)).toBe('/channels/messages')
-    expect(root.querySelector('[data-testid="channel-manager"]')?.textContent).toBe('channel:messages')
-    expect(root.querySelector('[data-testid="conversation-dashboard"]')).toBeNull()
+    expect(findButton('app.tabs.conversations', false)).toBeNull()
 
     const chatButton = findButton('OpenAI Chat')
     chatButton.click()
@@ -107,10 +83,12 @@ describe('ConsoleTab', () => {
     app.unmount()
   })
 
-  function findButton(text: string): HTMLButtonElement {
+  function findButton(text: string): HTMLButtonElement
+  function findButton(text: string, required: false): HTMLButtonElement | null
+  function findButton(text: string, required = true): HTMLButtonElement | null {
     const button = [...root.querySelectorAll('button')]
       .find(item => item.textContent?.trim() === text)
-    expect(button).toBeTruthy()
-    return button as HTMLButtonElement
+    if (required) expect(button).toBeTruthy()
+    return (button ?? null) as HTMLButtonElement | null
   }
 })

@@ -22,7 +22,6 @@ import {
 import { useConsoleChannels } from '@/composables/useConsoleChannels'
 import { useConversations } from '@/composables/useConversations'
 import {
-  channelSelectionPath,
   useConsoleSelection,
   type ConsoleSelection,
 } from '@/composables/useConsoleSelection'
@@ -70,13 +69,6 @@ watch(pendingTab, (tab) => {
 const switchToDashboard = () => {
   activeTab.value = 'dashboard'
 }
-
-const consoleTabSelection = computed<ConsoleSelection>(() => {
-  if (activeTab.value !== 'dashboard' && consoleSelection.value === '/conversations') {
-    return channelSelectionPath('messages')
-  }
-  return consoleSelection.value
-})
 
 const handleConsoleSelectionUpdate = (selection: ConsoleSelection) => {
   setConsoleSelection(selection)
@@ -253,7 +245,7 @@ onBeforeUnmount(() => {
           </div>
           <div v-show="activeTab === 'dashboard'" class="h-full">
             <ConsoleTab
-              :selection="consoleTabSelection"
+              :selection="consoleSelection"
               @update:selection="handleConsoleSelectionUpdate"
             />
           </div>

@@ -71,9 +71,9 @@ const menuItems = computed(() => [
   { id: 'status', label: t('nav.status'), icon: Activity, desc: t('nav.statusDesc') },
   { id: 'agent', label: t('nav.agent'), icon: Settings, desc: t('nav.agentDesc') },
   { id: 'channels', label: t('nav.channels'), icon: Network, desc: t('nav.channelsDesc') },
-  { id: 'cockpit', label: t('nav.cockpit'), icon: Kanban, desc: t('nav.cockpitDesc') },
   { id: 'env', label: t('nav.env'), icon: Sliders, desc: t('nav.envDesc') },
-  { id: 'dashboard', label: t('nav.dashboard'), icon: LayoutDashboard, desc: t('nav.dashboardDesc') }
+  { id: 'dashboard', label: t('nav.dashboard'), icon: LayoutDashboard, desc: t('nav.dashboardDesc') },
+  { id: 'cockpit', label: t('nav.cockpit'), icon: Kanban, desc: t('nav.cockpitDesc') }
 ] as const)
 
 const statusLabel = computed(() => {

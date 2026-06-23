@@ -2,7 +2,6 @@ import { computed, ref } from 'vue'
 import type { TabValue } from '@/types'
 import {
   DEFAULT_CONSOLE_SELECTION,
-  consoleSelectionSection,
   type ConsoleSelection,
 } from '@/composables/useConsoleSelection'
 
@@ -27,12 +26,8 @@ export function useDesktopActivity() {
   const isCockpitActive = computed(() => windowVisible.value && activeTab.value === 'cockpit')
   const isDashboardActive = computed(() => windowVisible.value && activeTab.value === 'dashboard')
   const isStatusActive = computed(() => windowVisible.value && activeTab.value === 'status')
-  const isConsoleChannelsActive = computed(() =>
-    isDashboardActive.value && consoleSelectionSection(consoleSelection.value) === 'channels',
-  )
-  const isConsoleConversationsActive = computed(() =>
-    isCockpitActive.value || (isDashboardActive.value && consoleSelection.value === '/conversations'),
-  )
+  const isConsoleChannelsActive = computed(() => isDashboardActive.value)
+  const isConsoleConversationsActive = computed(() => isCockpitActive.value)
 
   return {
     windowVisible,

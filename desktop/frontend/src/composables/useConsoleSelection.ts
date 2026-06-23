@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import type { ManagedChannelType } from '@/utils/channel-type-api'
 
-export type ConsoleSelection = `/channels/${ManagedChannelType}` | '/conversations'
+export type ConsoleSelection = `/channels/${ManagedChannelType}`
 
 const STORAGE_KEY = 'ccx-desktop-console-selection'
 // 与 WebUI 顶部导航保持一致：Messages / Chat / Images / Responses / Gemini
@@ -22,8 +22,6 @@ export function channelSelectionPath(type: ManagedChannelType): ConsoleSelection
 export function normalizeConsoleSelection(value: unknown): ConsoleSelection {
   if (typeof value !== 'string') return DEFAULT_CONSOLE_SELECTION
 
-  if (value === '/conversations') return value
-
   const channelMatch = value.match(/^\/channels\/([^/?#]+)$/)
   if (!channelMatch) return DEFAULT_CONSOLE_SELECTION
 
@@ -33,12 +31,7 @@ export function normalizeConsoleSelection(value: unknown): ConsoleSelection {
     : DEFAULT_CONSOLE_SELECTION
 }
 
-export function consoleSelectionSection(value: ConsoleSelection): 'channels' | 'conversations' {
-  return value === '/conversations' ? 'conversations' : 'channels'
-}
-
 export function consoleSelectionChannelType(value: ConsoleSelection): ManagedChannelType {
-  if (value === '/conversations') return 'messages'
   const channelType = value.replace('/channels/', '')
   return isManagedChannelType(channelType) ? channelType : 'messages'
 }
