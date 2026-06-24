@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### 修复
+
+- **Compshare 月度额度耗尽自动拉黑** - `extractErrorInfo`/`extractErrorCode` 兼容大写字段名 (`RetCode`/`Message`) 和数字类型错误码；`isInsufficientBalanceMessage` 增加 `monthly limit exceeded` 等精确短语，使 429 + 月度额度耗尽错误能正确触发 key 拉黑
+
 ## [v2.9.17] - 2026-06-23
 
 ### 新增
