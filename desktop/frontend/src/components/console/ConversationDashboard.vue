@@ -134,8 +134,8 @@ function buildColumnBuckets(items: ConversationInfo[]): Record<BoardColumnKey, C
 }
 
 function getBoardColumnKey(conversation: ConversationInfo): BoardColumnKey {
-  if (conversation.status === 'streaming') return 'streaming'
   if (conversation.hasSubagents) return 'subagents'
+  if (conversation.status === 'streaming') return 'streaming'
   if (conversation.status === 'idle') return 'idle'
   return 'active'
 }

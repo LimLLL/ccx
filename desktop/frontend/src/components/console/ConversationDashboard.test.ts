@@ -287,6 +287,14 @@ describe('ConversationDashboard', () => {
         lastActiveAt: '2026-06-23T09:00:00.000Z',
       }),
       createConversation({
+        id: 'streaming-subagent',
+        title: 'Streaming Subagent',
+        kind: 'responses',
+        status: 'streaming',
+        hasSubagents: true,
+        lastActiveAt: '2026-06-23T08:30:00.000Z',
+      }),
+      createConversation({
         id: 'active',
         title: 'Active One',
         kind: 'images',
@@ -306,7 +314,7 @@ describe('ConversationDashboard', () => {
     await nextTick()
 
     expect(getVisibleTitles('streaming')).toEqual(['Streaming One'])
-    expect(getVisibleTitles('subagents')).toEqual(['Subagent One'])
+    expect(getVisibleTitles('subagents')).toEqual(['Subagent One', 'Streaming Subagent'])
     expect(getVisibleTitles('active')).toEqual(['Active One'])
     expect(getVisibleTitles('idle')).toEqual(['Idle One'])
     expect(vueErrors).toEqual([])

@@ -119,6 +119,7 @@ import { useDisplay } from 'vuetify'
 import { api, type ConversationInfo, type SequenceOverrideInfo, type ChannelSequenceEntry } from '@/services/api'
 import { useGlobalTick } from '@/composables/useGlobalTick'
 import { useI18n } from '@/i18n'
+import { buildConversationColumnBuckets, type BoardColumnKey } from '@/utils/conversationDashboard'
 import ConversationCard from './ConversationCard.vue'
 
 const { t } = useI18n()
@@ -128,7 +129,6 @@ const emit = defineEmits<{
   error: [message: string]
 }>()
 
-type BoardColumnKey = 'streaming' | 'subagents' | 'active' | 'idle'
 type DashboardChannel = { index: number; name: string; priority: number; status: string; circuitOpen?: boolean }
 
 const loading = ref(true)
@@ -192,7 +192,7 @@ const visibleConversations = computed(() => {
 })
 
 const boardStats = computed(() => {
-  const counts = buildColumnBuckets(visibleConversations.value)
+  const counts = buildConversationColumnBuckets(visibleConversations.value)
   return boardColumnMeta.map(column => ({
     ...column,
     label: t(`cockpit.column.${column.key}`),
@@ -201,35 +201,13 @@ const boardStats = computed(() => {
 })
 
 const boardColumns = computed(() => {
-  const buckets = buildColumnBuckets(visibleConversations.value)
+  const buckets = buildConversationColumnBuckets(visibleConversations.value)
   return boardColumnMeta.map(column => ({
     ...column,
     label: t(`cockpit.column.${column.key}`),
     items: buckets[column.key],
   }))
 })
-
-function buildColumnBuckets(items: ConversationInfo[]): Record<BoardColumnKey, ConversationInfo[]> {
-  const buckets: Record<BoardColumnKey, ConversationInfo[]> = {
-    streaming: [],
-    subagents: [],
-    active: [],
-    idle: [],
-  }
-
-  for (const item of items) {
-    buckets[getBoardColumnKey(item)].push(item)
-  }
-
-  return buckets
-}
-
-function getBoardColumnKey(conversation: ConversationInfo): BoardColumnKey {
-  if (conversation.status === 'streaming') return 'streaming'
-  if (conversation.hasSubagents) return 'subagents'
-  if (conversation.status === 'idle') return 'idle'
-  return 'active'
-}
 
 function normalizeChannel(ch: any): DashboardChannel {
   const index = ch.index ?? ch.Index ?? 0
