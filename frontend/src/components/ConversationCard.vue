@@ -152,20 +152,23 @@
             <v-spacer />
             <v-btn v-if="hasSubagentOverride" size="x-small" variant="text" @click.stop="handleClearSubagentOverride">Clear</v-btn>
           </div>
-          <div class="d-flex align-center ga-1 flex-wrap subagent-routing-chips">
-            <v-chip
-              v-for="ch in subagentSequence"
+          <div class="channel-sequence" @click.stop>
+            <div
+              v-for="(ch, i) in subagentSequence"
               :key="`sa-${ch.index}`"
-              :color="ch.index === subagentCurrentChannel ? 'warning' : undefined"
-              :variant="ch.index === subagentCurrentChannel ? 'flat' : 'outlined'"
-              size="x-small"
-              @click.stop="handleSubagentOverride(ch)"
+              :class="['channel-item d-flex align-center pa-1 channel-item-animated', { 'demoted': i >= subagentSequence.length - 1 }]"
+              :style="{ animationDelay: `${Math.min(i, 12) * 35}ms` }"
             >
-              {{ ch.name }}
-              <template v-if="ch.index === subagentCurrentChannel" #append>
-                <v-icon size="10">mdi-check</v-icon>
-              </template>
-            </v-chip>
+              <span class="seq-num">{{ String(i + 1).padStart(2, '0') }}</span>
+              <span class="seq-arrow">&rarr;</span>
+              <span class="text-caption flex-grow-1 channel-name" @click.stop="handleSubagentMoveToTop(ch, i)">{{ ch.name }}</span>
+              <v-chip v-if="ch.index === subagentCurrentChannel" size="x-small" color="warning" variant="flat" class="mr-1">CURRENT</v-chip>
+              <v-chip v-if="ch.status === 'suspended'" size="x-small" variant="flat" class="fused-chip mr-1">PAUSED</v-chip>
+              <v-chip v-if="ch.circuitOpen" size="x-small" color="error" variant="tonal" class="mr-1">TRIPPED</v-chip>
+              <v-btn icon size="x-small" variant="text" :disabled="i === subagentSequence.length - 1" @click.stop="handleSubagentDemote(i)">
+                <v-icon size="14">mdi-arrow-down</v-icon>
+              </v-btn>
+            </div>
           </div>
         </div>
 
@@ -443,6 +446,23 @@ function handleQuickOverride(ch: ChannelInfo) {
   if (!hasOverride.value && ch.index === props.conversation.currentChannel) return
   const rest = channelSequence.value.filter(c => c.index !== ch.index)
   emit('setOverride', props.conversation.id, buildSequence([ch, ...rest]))
+}
+
+// subagent 渠道：移到最前（等同主对话的 moveToTop）
+function handleSubagentMoveToTop(ch: ChannelInfo, currentIdx: number) {
+  if (currentIdx === 0) return
+  const current = [...subagentSequence.value]
+  const [item] = current.splice(currentIdx, 1)
+  current.unshift(item)
+  emit('setOverride', props.conversation.id, buildSequence(channelSequence.value), buildSequence(current))
+}
+
+// subagent 渠道：下移一位
+function handleSubagentDemote(index: number) {
+  const current = [...subagentSequence.value]
+  if (index >= current.length - 1) return
+  ;[current[index], current[index + 1]] = [current[index + 1], current[index]]
+  emit('setOverride', props.conversation.id, buildSequence(channelSequence.value), buildSequence(current))
 }
 
 // subagent 渠道快捷覆盖：保留主序列不变，仅设置 subagent 专用序列

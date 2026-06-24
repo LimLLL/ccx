@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { ArrowDown, Check, Copy, CornerUpLeft, GitBranch, MessageSquareReply, Send } from 'lucide-vue-next'
+import { ArrowDown, Check, ChevronDown, Copy, CornerUpLeft, GitBranch, MessageSquareReply, Send } from 'lucide-vue-next'
 import { useLanguage } from '@/composables/useLanguage'
 import type {
   ChannelSequenceEntry,
@@ -277,6 +277,23 @@ function handleQuickOverride(channel: ChannelInfo) {
   emit('setOverride', props.conversation.id, buildSequence([channel, ...rest]))
 }
 
+// subagent 渠道：移到最前
+function handleSubagentMoveToTop(channel: ChannelInfo, currentIndex: number) {
+  if (currentIndex === 0) return
+  const current = [...subagentSequence.value]
+  const [item] = current.splice(currentIndex, 1)
+  current.unshift(item)
+  emit('setOverride', props.conversation.id, buildSequence(channelSequence.value), buildSequence(current))
+}
+
+// subagent 渠道：下移一位
+function handleSubagentDemote(index: number) {
+  const current = [...subagentSequence.value]
+  if (index >= current.length - 1) return
+  ;[current[index], current[index + 1]] = [current[index + 1], current[index]]
+  emit('setOverride', props.conversation.id, buildSequence(channelSequence.value), buildSequence(current))
+}
+
 // subagent 渠道快捷覆盖：保留主序列不变，仅设置 subagent 专用序列
 function handleSubagentOverride(channel: ChannelInfo) {
   const rest = subagentSequence.value.filter(c => c.index !== channel.index)
@@ -547,22 +564,24 @@ function shortId(value: string): string {
             清除
           </Button>
         </div>
-        <div class="flex flex-wrap items-center gap-1.5 max-h-[90px] overflow-y-auto overscroll-contain">
-          <button
-            v-for="ch in subagentSequence"
+        <div class="channel-sequence" @click.stop>
+          <div
+            v-for="(ch, i) in subagentSequence"
             :key="`sa-${ch.index}`"
-            type="button"
-            :class="[
-              'rounded border px-2 py-0.5 text-xs transition',
-              ch.index === subagentCurrentChannel
-                ? 'border-amber-500 bg-amber-500 text-white'
-                : 'border-border bg-background/50 text-foreground hover:border-amber-500/40 hover:bg-amber-500/10',
-            ]"
-            @click.stop="handleSubagentOverride(ch)"
+            class="channel-item channel-item-animated flex items-center gap-1 border-b border-border/60 px-2 py-1.5 last:border-b-0"
+            :class="{ demoted: i >= subagentSequence.length - 1 }"
+            :style="{ animationDelay: `${Math.min(i, 12) * 35}ms` }"
           >
-            {{ ch.name }}
-            <Check v-if="ch.index === subagentCurrentChannel" class="ml-0.5 inline h-2.5 w-2.5" />
-          </button>
+            <span class="seq-num">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span class="seq-arrow">→</span>
+            <span class="channel-name flex-1 truncate text-xs" @click.stop="handleSubagentMoveToTop(ch, i)">{{ ch.name }}</span>
+            <span v-if="ch.index === subagentCurrentChannel" class="mr-1 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">CURRENT</span>
+            <span v-if="ch.status === 'suspended'" class="fused-chip mr-1">PAUSED</span>
+            <span v-if="ch.circuitOpen" class="mr-1 rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold text-red-500">TRIPPED</span>
+            <button type="button" class="ml-auto shrink-0 p-0.5 opacity-50 hover:opacity-100 disabled:opacity-20" :disabled="i === subagentSequence.length - 1" @click.stop="handleSubagentDemote(i)">
+              <ChevronDown class="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
