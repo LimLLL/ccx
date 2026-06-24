@@ -68,7 +68,7 @@
     </v-card>
 
     <template v-else>
-      <v-card v-if="!visibleConversations.length" variant="outlined" class="text-center pa-8 mb-4 cockpit-empty">
+      <v-card v-if="!visibleBoardItems.length" variant="outlined" class="text-center pa-8 mb-4 cockpit-empty">
         <div class="text-body-2 text-medium-emphasis">
           {{ t('cockpit.noMatches') }}
         </div>
@@ -91,15 +91,17 @@
           <div class="cockpit-column-body">
             <div v-if="!column.items.length" class="cockpit-column-empty">--</div>
             <ConversationCard
-              v-for="conv in column.items"
-              :key="conv.id"
+              v-for="item in column.items"
+              :key="item.conversation.id"
               class="cockpit-board-card"
-              :conversation="conv"
-              :override="overrides[conv.id]"
-              :available-channels="getChannelsForKind(conv.kind)"
-              :expanded="expandedCards.has(conv.id)"
+              :conversation="item.conversation"
+              :subagents="item.subagents"
+              :subagent-summary="item.subagentSummary"
+              :override="overrides[item.conversation.id]"
+              :available-channels="getChannelsForKind(item.conversation.kind)"
+              :expanded="expandedCards.has(item.conversation.id)"
               :now-ms="nowMs"
-              @toggle-expand="toggleExpand(conv.id)"
+              @toggle-expand="toggleExpand(item.conversation.id)"
               @set-override="handleSetOverride"
               @remove-override="handleRemoveOverride"
               @feedback="handleFeedback"
@@ -119,7 +121,7 @@ import { useDisplay } from 'vuetify'
 import { api, type ConversationInfo, type SequenceOverrideInfo, type ChannelSequenceEntry } from '@/services/api'
 import { useGlobalTick } from '@/composables/useGlobalTick'
 import { useI18n } from '@/i18n'
-import { buildConversationColumnBuckets, type BoardColumnKey } from '@/utils/conversationDashboard'
+import { buildConversationBoardItems, filterConversationBoardItems, type BoardColumnKey, type ConversationBoardItem } from '@/utils/conversationDashboard'
 import ConversationCard from './ConversationCard.vue'
 
 const { t } = useI18n()
@@ -130,6 +132,7 @@ const emit = defineEmits<{
 }>()
 
 type DashboardChannel = { index: number; name: string; priority: number; status: string; circuitOpen?: boolean }
+type CockpitStat = { key: string; label: string; color: string; count: number }
 
 const loading = ref(true)
 const conversations = ref<ConversationInfo[]>([])
@@ -141,11 +144,9 @@ const overrideDuration = ref(1800)
 const nowMs = ref(Date.now())
 const expandedCards = ref(new Set<string>())
 
-const boardColumnMeta: Array<{ key: BoardColumnKey; color: string }> = [
-  { key: 'streaming', color: '#ef4444' },
-  { key: 'subagents', color: '#f59e0b' },
-  { key: 'active', color: '#6366f1' },
-  { key: 'idle', color: '#10b981' },
+const boardColumnMeta: Array<{ key: BoardColumnKey; label: string; color: string }> = [
+  { key: 'working', label: 'Working', color: '#6366f1' },
+  { key: 'idle', label: t('cockpit.column.idle'), color: '#10b981' },
 ]
 
 const kindFilterOptions = [
@@ -173,41 +174,42 @@ const sortedConversations = computed(() => {
   return [...conversations.value].sort((a, b) => new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime())
 })
 
-const visibleConversations = computed(() => {
-  let list = sortedConversations.value
-  if (kindFilter.value) list = list.filter(c => c.kind === kindFilter.value)
+const boardItems = computed(() => buildConversationBoardItems(sortedConversations.value))
 
-  const q = (searchQuery.value || '').trim().toLowerCase()
-  if (q) {
-    list = list.filter(c =>
-      (c.title || '').toLowerCase().includes(q) ||
-      (c.userId || '').toLowerCase().includes(q) ||
-      (c.rawUserId || '').toLowerCase().includes(q) ||
-      (c.lastModel || '').toLowerCase().includes(q) ||
-      (c.channelName || '').toLowerCase().includes(q),
-    )
-  }
-
-  return list
+const visibleBoardItems = computed(() => {
+  return filterConversationBoardItems(boardItems.value, kindFilter.value, searchQuery.value)
 })
 
-const boardStats = computed(() => {
-  const counts = buildConversationColumnBuckets(visibleConversations.value)
-  return boardColumnMeta.map(column => ({
+const boardStats = computed<CockpitStat[]>(() => {
+  const counts = bucketBoardItems(visibleBoardItems.value)
+  const subagentTotal = visibleBoardItems.value.reduce((total, item) => total + item.subagentSummary.total, 0)
+  const streamingTotal = visibleBoardItems.value.reduce((total, item) => total + (item.conversation.status === 'streaming' ? 1 : 0) + item.subagentSummary.streaming, 0)
+  return [
+    ...boardColumnMeta.map(column => ({
     ...column,
-    label: t(`cockpit.column.${column.key}`),
+    label: column.label,
     count: counts[column.key].length,
-  }))
+    })),
+    { key: 'subagents', label: t('cockpit.subagents'), color: '#f59e0b', count: subagentTotal },
+    { key: 'streaming', label: t('cockpit.column.streaming'), color: '#ef4444', count: streamingTotal },
+  ]
 })
 
 const boardColumns = computed(() => {
-  const buckets = buildConversationColumnBuckets(visibleConversations.value)
+  const buckets = bucketBoardItems(visibleBoardItems.value)
   return boardColumnMeta.map(column => ({
     ...column,
-    label: t(`cockpit.column.${column.key}`),
+    label: column.label,
     items: buckets[column.key],
   }))
 })
+
+function bucketBoardItems(items: ConversationBoardItem[]): Record<BoardColumnKey, ConversationBoardItem[]> {
+  return items.reduce<Record<BoardColumnKey, ConversationBoardItem[]>>((buckets, item) => {
+    buckets[item.aggregateStatus].push(item)
+    return buckets
+  }, { working: [], idle: [] })
+}
 
 function normalizeChannel(ch: any): DashboardChannel {
   const index = ch.index ?? ch.Index ?? 0
@@ -415,7 +417,7 @@ fetchAllChannels()
 
 .cockpit-board {
   display: grid;
-  grid-template-columns: repeat(4, minmax(240px, 1fr));
+  grid-template-columns: minmax(420px, 1.35fr) minmax(320px, 1fr);
   gap: 14px;
   align-items: start;
 }
